@@ -14,10 +14,11 @@ class Employee extends Model
         'name',
         'lastname',
         'email',
-        'age'
+        'age',
+        'status'
     ];
 
-    public function jobs():BelongsToMany{
-        return $this->belongsToMany(Job::class);
+    public function occupations():BelongsToMany{
+        return $this->belongsToMany(Occupation::class);
     }
 }
