@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
+            $table->uuid('employee_id');
+            
+
+
+
+            $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
             $table->timestamps();
         });
     }

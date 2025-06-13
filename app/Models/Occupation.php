@@ -16,6 +16,6 @@ class Occupation extends Model
     ];
 
     public function employees():BelongsToMany{
-        return $this->belongsToMany(Employee::class);
+        return $this->belongsToMany(Employee::class, 'employee_occupation', 'occupation_id','employee_id','id','social_id');
     }
 }

@@ -12,7 +12,7 @@ class Employee extends Model
     Use HasFactory;
 
     protected $primaryKey='social_id';
-    // protected $incrementing = false;
+    public $incrementing = false;
     protected $keyType= 'string';
 
     protected $fillable = [
@@ -34,6 +34,6 @@ class Employee extends Model
     ];
 
     public function occupations():BelongsToMany{
-        return $this->belongsToMany(Occupation::class);
+        return $this->belongsToMany(Occupation::class, 'employee_occupation', 'employee_id','occupation_id','social_id','id');
     }
 }

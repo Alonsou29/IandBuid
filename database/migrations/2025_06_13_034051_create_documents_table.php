@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
+            $table->uuid('employee_id');
+            $table->string('type');
+            $table->text('url');
+            $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -29,18 +29,28 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/prueba', function (){
     $employee = Employee::create([
+        'social_id'=>'sdasdah-ew20',
         'name'=>'Alonso',
         'lastname'=>'Urdaneta',
+        'phone_number'=>'04246228729',
         'email' => 'soyunxd@hotmail.com',
         'age'=> 20,
-        'status'=>true
+        'birthday'=>'2003-03-23',
+        'apply_occupations'=>true,
+        'avaible_travel'=>true,
+        'military_services'=>true,
+        'start_services'=>'10/03/2020',
+        'end_services'=>'20/03/2023',
+        'military_desc'=>'terrestre',
+        'contract_url'=>'~/micontrato/contrattofulanito.pdf',
+        'status'=>true,
     ]);
     $occupation = Occupation::create([
         'name' => 'Cemento',
         'type'=>'albanil'
     ]);
 
-    $employee->occupations()->attach([1,1]);
+    $employee->occupations()->attach(1);
 
 
 });
