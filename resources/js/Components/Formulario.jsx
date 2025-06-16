@@ -115,13 +115,21 @@ const handleNext = (e) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 bg-white shadow rounded space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6">
       {/* Barra de pasos */}
-      <ul className="flex justify-between text-sm font-semibold mb-6 border-b pb-2">
-        {steps.map((label, index) => (
-          <li key={index} className={`px-2 ${index === step ? 'text-red-600' : 'text-gray-400'}`}>{label}</li>
-        ))}
-      </ul>
+<ul className="flex overflow-x-auto whitespace-nowrap text-sm font-semibold mb-6 border-b pb-2">
+  {steps.map((label, index) => (
+    <li
+      key={index}
+      className={`px-4 py-2 flex-shrink-0 ${
+        index === step ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400'
+      }`}
+    >
+      {label}
+    </li>
+  ))}
+</ul>
+
 
       {/* Paso 1 - JOB */}
       {step === 0 && (
