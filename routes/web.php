@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
+Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations']);
 
 Route::get('/prueba', function (){
     $employee = Employee::create([

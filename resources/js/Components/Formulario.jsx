@@ -109,8 +109,8 @@ const handleNext = (e) => {
       return;
     }
 
-/*     const response = await axios.post('/createEmployee', formData);
-    console.log('Cliente registrado:', response.data.client); */
+    // const response = await axios.post('/createEmployee', formData);
+    console.log('Cliente registrado:', formData);
     MySwal.fire('Success', 'Form submitted successfully!', 'success');
   };
 
