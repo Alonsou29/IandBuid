@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Occupation;
+use App\Models\Address;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
@@ -35,5 +37,9 @@ class Employee extends Model
 
     public function occupations():BelongsToMany{
         return $this->belongsToMany(Occupation::class, 'employee_occupation', 'employee_id','occupation_id','social_id','id');
+    }
+
+    public function addresses():HasMany{
+        return $this->hasMany(Address::class,'employee_id','social_id');
     }
 }

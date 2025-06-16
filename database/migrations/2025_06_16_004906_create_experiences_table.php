@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
-            $table->uuid('employee_id');
-            $table->string('type');
-            $table->text('url');
-            $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
+        Schema::create('experiences', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('experiences');
     }
 };

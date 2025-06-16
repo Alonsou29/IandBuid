@@ -12,12 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('addresses', function (Blueprint $table) {
-            $table->id();
             $table->uuid('employee_id');
-            
-
-
-
+            $table->string('state');
+            $table->string('city');
+            $table->string('street');
+            $table->string('zip');
             $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
             $table->timestamps();
         });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import axios from 'axios';
 
 const MySwal = withReactContent(Swal);
 
@@ -28,10 +29,11 @@ export default function Formulario() {
   };
 
   // Validación de campos y control del envío del formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const form = e.target;
+    const social_id = form.social_id.value.trim();
     const firstName = form.firstName.value.trim();
     const lastName = form.lastName.value.trim();
     const dob = new Date(form.dob.value);
@@ -72,11 +74,15 @@ export default function Formulario() {
       return;
     }
 
+    const response = await axios.post('/createEmployee', form);
+     console.log('Cliente registrado:', response.data.client);
+
         // Si todo está correcto envia el exitoso del envio owo
         MySwal.fire('Success', 'Form submitted successfully!', 'success');
 
         alert(
         `Datos enviados:\n` +
+        `Social id: ${social_id}\n`+
         `First Name: ${firstName}\n` +
         `Last Name: ${lastName}\n` +
         `Date of Birth: ${dob.toLocaleDateString()}\n` +
@@ -110,6 +116,15 @@ export default function Formulario() {
         name="lastName"
         className="w-full border border-gray-300 rounded px-3 py-2"
         placeholder="Enter last name"
+      />
+    </div>
+    <div>
+      <label className="block font-semibold mb-1">Social Id</label>
+      <input
+        type="text"
+        name="social_id"
+        className="w-full border border-gray-300 rounded px-3 py-2"
+        placeholder="Enter social id"
       />
     </div>
   </div>

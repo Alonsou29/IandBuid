@@ -1,7 +1,7 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Card from '../components/Card';
-import Formulario from '../components/Formulario';
+import Navbar from '/resources/js/Components/Navbar';
+import Card from '/resources/js/Components/Card';
+import Formulario from '/resources/js/Components/Formulario';
 
 export default function Welcome() {
   return (
@@ -42,7 +42,7 @@ export default function Welcome() {
 
         <section id="whoweare" className="flex flex-col md:flex-row w-full min-h-[400px]">
 
-            <div className="md:w-1/2 p-6 flex flex-col justify-center space-y-8 
+            <div className="md:w-1/2 p-6 flex flex-col justify-center space-y-8
                             text-center md:text-justify">
                 <div>
                 <h2 className="font-spartan text-red-600 text-4xl md:text-4xl lg:text-5xl font-bold mb-4">
@@ -102,10 +102,10 @@ export default function Welcome() {
             image: "/SERVICES/s4.png"
             }].map(({title, description, image}, idx) => (
             <div key={idx} className="flex flex-col">
-                <Card 
-                title={title} 
-                description={description} 
-                image={image} 
+                <Card
+                title={title}
+                description={description}
+                image={image}
                 className="flex-grow h-[480px]"  // altura fija y ocupa el espacio disponible
                 />
                 <button
