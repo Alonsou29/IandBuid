@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "lucide-react": "^0.515.0",
+        "react-data-table-component": "^7.7.0",
         "sweetalert2": "^11.22.0",
         "sweetalert2-react-content": "^5.1.0"
     }
