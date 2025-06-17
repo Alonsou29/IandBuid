@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 
+
+
 html {
   scroll-behavior: smooth;
 }
@@ -12,3 +14,11 @@ html {
 .font-spartan {
   font-family: 'League Spartan', sans-serif;
 }
+
+/* Cambia el color de las flechas */
+.slick-prev:before,
+.slick-next:before {
+  color: red !important; /* rojo */
+  font-size: 30px; /* tamaño opcional */
+}
+

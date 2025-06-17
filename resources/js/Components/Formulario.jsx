@@ -16,9 +16,10 @@ const steps = [
   'Submit',
 ];
 
-export default function Formulario() {
+export default function Formulario({ selectedJob }) {
   const [step, setStep] = useState(0);
-  const [job, setJob] = useState('');
+  const [job, setJob] = useState(selectedJob || "");
+  const showJobSelect = !selectedJob;
   const [files, setFiles] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -31,10 +32,12 @@ export default function Formulario() {
     zip: '',
     email: '',
     phone: '',
+    willingToTravel: '', 
     dfac: '',
     branch: '',
     airport: '',
-    dateAvailable: '',
+    startDate: '',
+    endDate: '',
     references: [{ name: '', phone: '', email: '' }, { name: '', phone: '', email: '' }],
     workHistory: [
       { employer: '', phone: '', start: '', end: '', title: '', duties: '', reason: '' },
@@ -83,6 +86,8 @@ const handleNext = (e) => {
     setFiles(updated);
   };
 
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const dob = new Date(formData.dob);
@@ -117,36 +122,36 @@ const handleNext = (e) => {
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6">
       {/* Barra de pasos */}
-<ul className="flex overflow-x-auto whitespace-nowrap text-sm font-semibold mb-6 border-b pb-2">
-  {steps.map((label, index) => (
-    <li
-      key={index}
-      className={`px-4 py-2 flex-shrink-0 ${
-        index === step ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400'
-      }`}
-    >
-      {label}
-    </li>
-  ))}
-</ul>
+      <ul className="flex overflow-x-auto whitespace-nowrap text-sm font-semibold mb-6 border-b pb-2">
+        {steps.map((label, index) => (
+          <li
+            key={index}
+            className={`px-4 py-2 flex-shrink-0 ${
+              index === step ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400'
+            }`}
+          >
+            {label}
+          </li>
+        ))}
+      </ul>
 
 
       {/* Paso 1 - JOB */}
       {step === 0 && (
-        <div>
-          <label className="block font-semibold mb-2">Select Job</label>
-          <select
-            name="job"
-            value={job}
-            onChange={(e) => setJob(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          >
-            <option value="">-- Select --</option>
-            <option>Commercial & Residential ROOFING</option>
-            <option>Commercial & Residential FRAMING</option>
-            <option>Commercial & Residential REMODELS</option>
-            <option>Commercial & Residential ADDITIONS</option>
-          </select>
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-center">Job Information</h2>
+          {showJobSelect ? (
+            <select
+              className="w-full p-2 border rounded"
+              value={job}
+              onChange={(e) => setJob(e.target.value)}
+            >
+              <option value="">Select a job</option>
+              {/* opciones si las tuvieras */}
+            </select>
+          ) : (
+            <p className="text-center text-lg text-red-600 font-semibold">{job}</p>
+          )}
         </div>
       )}
 
@@ -230,22 +235,51 @@ const handleNext = (e) => {
               <input name="phone" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}   inputMode="numeric" placeholder="Phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-3 py-2" />
             </div>
           </div>
+
+          <div className="col-span-2">
+            <h3 className="text-xl font-bold mt-6 mb-2 text-red-600">Travel Availability</h3>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Are you willing to travel?</label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="willingToTravel"
+                  value="yes"
+                  checked={formData.willingToTravel === 'yes'}
+                  onChange={handleChange}
+                  className="accent-red-600"
+                />
+                Yes
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="willingToTravel"
+                  value="no"
+                  checked={formData.willingToTravel === 'no'}
+                  onChange={handleChange}
+                  className="accent-red-600"
+                />
+                No
+              </label>
+            </div>
+          </div>
         </>
       )}
 
       {/* Paso 4 - Military Experience */}
       {step === 3 && (
         <>
-          <label className="block font-semibold mb-1">1. What is your DFAC Experience?</label>
+          <label className="block font-semibold mb-1">1. Did you have military experience?</label>
           <div className="space-y-1 mb-4">
-            {['No Base Experience', 'Some Base Experience', 'Multiple Base Experience'].map((option) => (
-              <label key={option} className="block"><input type="radio" name="dfac" value={option} checked={formData.dfac === option} onChange={handleChange} className="mr-2" />{option}</label>
+            {['Yes', 'No'].map((option) => (
+              <label key={option} className="block"><input type="radio" name="experincemilitary" value={option} checked={formData.dfac === option} onChange={handleChange} className="mr-2" />{option}</label>
             ))}
           </div>
 
           <label className="block font-semibold mb-1">2. Branch of the U.S. Armed Forces</label>
           <div className="space-y-1 mb-4">
-            {['Air Force', 'Army', 'Navy', 'U.S. Costs Guard', 'None'].map((option) => (
+            {['Air Force', 'Army', 'Navy', 'U.S. Coast Guard', 'None'].map((option) => (
               <label key={option} className="block"><input type="radio" name="branch" value={option} checked={formData.branch === option} onChange={handleChange} className="mr-2" />{option}</label>
             ))}
           </div>
@@ -254,7 +288,29 @@ const handleNext = (e) => {
           <input onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}   inputMode="numeric" name="airport" placeholder="(code)" value={formData.airport} onChange={handleChange} className="border rounded px-3 py-2 w-full mb-3" />
 
           <label className="block font-semibold mb-1">4.Date Available</label>
-          <input name="dateAvailable" type="date" value={formData.dateAvailable} onChange={handleChange} className="border rounded px-3 py-2 w-full" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block font-semibold mb-1">- Start Date</label>
+              <input
+                name="startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={handleChange}
+                className="border rounded px-3 py-2 w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold mb-1">- End Date</label>
+              <input
+                name="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={handleChange}
+                className="border rounded px-3 py-2 w-full"
+              />
+            </div>
+          </div>
         </>
       )}
 

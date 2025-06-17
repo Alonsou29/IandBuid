@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '/resources/js/Components/Navbar';
 import Card from '/resources/js/Components/Card';
+import MeetOurTeam from '/resources/js/Components/MeetOurTeam';
 import Formulario from '/resources/js/Components/Formulario';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick-theme.css";
+
+const images = Array.from({ length: 14 }, (_, i) => `/PORTFOLIO/p${i + 1}.jpg`);
 
 export default function Welcome() {
+  const [nav1, setNav1] = useState(null);
+  const [nav2, setNav2] = useState(null);
+
+  const slider1 = useRef();
+  const slider2 = useRef();
+
   return (
     <div className="relative">
       <Navbar />
@@ -117,15 +129,122 @@ export default function Welcome() {
             </div>
             ))}
         </div>
+
+        </section>
+
+ {/* Sección PORTFOLIO */}
+      <section id="portfolio" className="bg-gray-100 py-12 px-6 sm:px-10">
+        <h2 className="text-black text-4xl font-bold text-center mb-8 font-spartan">
+          PORTFOLIO
+        </h2>
+
+        <p className="text-center text-xl font-bold mb-10">
+          Experience the Craftsmanship: A Gallery of I and C Builders's Masterful Construction Projects
+        </p>
+
+        <div className="max-w-5xl mx-auto">
+          {/* Carrusel principal */}
+          <Slider
+            asNavFor={nav2}
+            ref={(slider) => setNav1(slider)}
+            arrows={true}
+            autoplay={true}
+            autoplaySpeed={4000}
+            slidesToShow={1}
+            className="mb-4"
+          >
+            {images.map((src, index) => (
+              <div key={index} className="px-2">
+                <img
+                  src={src}
+                  alt={`Project ${index + 1}`}
+                  className="w-full h-[600px] object-contain rounded-lg shadow-md"
+                />
+              </div>
+            ))}
+          </Slider>
+
+          {/* Miniaturas */}
+          <Slider
+            asNavFor={nav1}
+            ref={(slider) => setNav2(slider)}
+            slidesToShow={6}
+            swipeToSlide={true}
+            focusOnSelect={true}
+            centerMode={true}
+            arrows={false}
+            className="mt-4"
+          >
+            {images.map((src, index) => (
+              <div key={index} className="px-1">
+                <img
+                  src={src}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="h-20 w-full object-cover rounded border-2 border-transparent hover:border-red-500 transition duration-200"
+                />
+              </div>
+            ))}
+          </Slider>
+        </div>
+      </section>
+
+
+        <section id="join" className="bg-gray-100 py-12 px-6 sm:px-10">
+          <h2 className="text-black text-4xl font-bold text-center mb-8 font-spartan">
+            JOIN OUR TEAM AT I & C BUILDERS!
+          </h2>
+
+          <div className="max-w-3xl mx-auto text-gray-800 space-y-6 text-lg">
+            <p>
+              Are you looking for a career opportunity with a growing construction company?
+              At <strong>I & C Builders</strong>, we’re seeking dedicated and skilled professionals to join our team in Lafayette, LA.
+            </p>
+
+            <div>
+              <h3 className="text-2xl font-semibold mb-2 text-red-600">Why Work With Us?</h3>
+              <ul className="list-disc list-inside space-y-1">
+                <li><strong>Career Growth:</strong> Opportunities for professional development and advancement.</li>
+                <li><strong>Team Environment:</strong> A supportive and collaborative workplace.</li>
+                <li><strong>Quality Projects:</strong> Work on exciting and high-profile construction projects.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-semibold mb-2 text-red-600">Current Openings</h3>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Sales</li>
+                <li>Project Manager</li>
+                <li>Labor Tech</li>
+                <li>Office / Admin</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-semibold mb-2 text-red-600">How To Apply?</h3>
+              <p>Ready to take the next step?</p>
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-10">
+            <a
+              href="/occupation"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-32 rounded shadow transition duration-300"
+            >
+              Occupation Opportunities
+            </a>
+          </div>
         </section>
 
 
-        <section id="join" className="bg-gray-100">
-        <h2 className="text-black text-4xl font-bold text-center mb-12 font-spartan pt-8">
-            JOIN OUR TEAM!
-        </h2>
 
-            <Formulario></Formulario>
+        <section id="meettheteam" className="w-full  bg-black">
+
+            <MeetOurTeam></MeetOurTeam>
+        </section>
+
+
+        <section id="contact" className="w-full  bg-black">
+
         </section>
 
 

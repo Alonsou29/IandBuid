@@ -22,6 +22,20 @@ class OccupationController extends Controller
         return Inertia::render("Occupations", ["occupations"=>$Occupation]);
     }
 
+        public function vistaOccupations()
+    {
+        $Occupations = Occupation::all();
+
+
+        $mapped = $Occupations->map(function ($item) {
+            $item->status = $item->status == 1 ? 'Activo' : 'Inactivo';
+            return $item;
+        });
+
+        return Inertia::render("Occupations_Vista", ["occupations" => $mapped]);
+    }
+
+
     public function create(Request $request){
         try{
             $createOccupation = Occupation::create([

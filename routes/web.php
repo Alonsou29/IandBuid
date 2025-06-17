@@ -36,6 +36,7 @@ Route::post('/createOccupation',[OccupationController::class, 'create']);
 Route::put('/updateOccupation/{id}',[OccupationController::class, 'update']);
 Route::delete('/deleteOccupation/{id}',[OccupationController::class, 'destroy']);
 Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations']);
+Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');
 
 Route::get('/prueba', function (){
     $employee = Employee::create([
