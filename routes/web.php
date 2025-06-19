@@ -29,6 +29,16 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
+<<<<<<< Updated upstream
+=======
+//occupations
+Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
+Route::post('/createOccupation',[OccupationController::class, 'create']);
+Route::put('/updateOccupation/{id}',[OccupationController::class, 'update']);
+Route::delete('/deleteOccupation/{id}',[OccupationController::class, 'destroy']);
+Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations'])->name('occupations.index');
+Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');
+>>>>>>> Stashed changes
 
 Route::get('/prueba', function (){
     $employee = Employee::create([

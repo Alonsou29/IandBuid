@@ -12,8 +12,8 @@ export default function Navbar() {
     { label: "WHO WE ARE", href: "#whoweare" },
     { label: "SERVICES", href: "#services" },
     { label: "PORTFOLIO", href: "#portfolio" },
-    { label: "MEET THE TEAM", href: "#meettheteam" },
     { label: "JOIN OUR TEAM", href: "#join" },
+    { label: "MEET THE TEAM", href: "#meettheteam" },
     { label: "CONTACT", href: "#contact" },
   ];
 

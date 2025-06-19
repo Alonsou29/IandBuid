@@ -31,7 +31,12 @@ export default function Formulario() {
     zip: '',
     email: '',
     phone: '',
+<<<<<<< Updated upstream
     dfac: '',
+=======
+    willingToTravel: '', 
+    experincemilitary: '',
+>>>>>>> Stashed changes
     branch: '',
     airport: '',
     dateAvailable: '',
@@ -238,11 +243,20 @@ const handleNext = (e) => {
         <>
           <label className="block font-semibold mb-1">1. What is your DFAC Experience?</label>
           <div className="space-y-1 mb-4">
+<<<<<<< Updated upstream
             {['No Base Experience', 'Some Base Experience', 'Multiple Base Experience'].map((option) => (
               <label key={option} className="block"><input type="radio" name="dfac" value={option} checked={formData.dfac === option} onChange={handleChange} className="mr-2" />{option}</label>
+=======
+            {['Yes', 'No'].map((option) => (
+              <label key={option} className="block">
+                <input
+                  type="radio" name="experincemilitary" value={option} checked={formData.experincemilitary === option} onChange={handleChange} className="mr-2"
+                />
+                {option}
+              </label>
+>>>>>>> Stashed changes
             ))}
           </div>
-
           <label className="block font-semibold mb-1">2. Branch of the U.S. Armed Forces</label>
           <div className="space-y-1 mb-4">
             {['Air Force', 'Army', 'Navy', 'U.S. Costs Guard', 'None'].map((option) => (
@@ -431,10 +445,11 @@ const handleNext = (e) => {
 
           <section>
             <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Military Experience</h3>
-            <p><strong>DFAC Experience:</strong> {formData.dfac || '-'}</p>
+            <p><strong>Military experience?:</strong> {formData.experincemilitary || '-'}</p>
             <p><strong>Branch:</strong> {formData.branch || '-'}</p>
             <p><strong>Departing Airport:</strong> {formData.airport || '-'}</p>
-            <p><strong>Date Available:</strong> {formData.dateAvailable || '-'}</p>
+            <p><strong>Date Start:</strong> {formData.startDate || '-'}</p>
+            <p><strong>Date End:</strong> {formData.endDate || '-'}</p>
           </section>
 
           <section>
