@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // Importa Axios
 
-function FormularioComponenteEdicion({ recursoId }) { // Asume que recibes el ID del recurso a editar
+function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que recibes el ID del recurso a editar
   const [nombre, setNombre] = useState('');
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
@@ -67,6 +67,11 @@ function FormularioComponenteEdicion({ recursoId }) { // Asume que recibes el ID
       console.log('Recurso actualizado exitosamente:', response.data);
       alert('Recurso actualizado exitosamente!');
 
+        // ✅ Llamar a onSuccess con la data actualizada
+    if (typeof onSuccess === 'function') {
+      onSuccess(response.data.data); // <-- ESTA LÍNEA es la clave
+    }
+
       // Opcional: Redirigir al usuario o hacer algo más después de la actualización exitosa
       // history.push('/alguna-otra-pagina');
 
@@ -90,88 +95,85 @@ function FormularioComponenteEdicion({ recursoId }) { // Asume que recibes el ID
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: 'auto', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Editar Recurso</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="nombre" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre:</label>
-          <input
-            type="text"
-            id="nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
+  <div className="p-6 max-w-full mx-auto bg-white rounded-lg shadow-lg">
+    <h2 className="text-2xl font-semibold mb-6 text-center text-red-700">Edit Occupation</h2>
+    <form onSubmit={handleSubmit}>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="type" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Tipo:</label>
-          <input
-            type="text"
-            id="type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
+      <label htmlFor="nombre" className="block mb-2 font-semibold text-gray-700">
+        Name <span className="text-red-500">*</span>
+      </label>
+      <input
+        id="nombre"
+        type="text"
+        value={nombre}
+        onChange={e => setNombre(e.target.value)}
+        required
+        className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+        placeholder="Enter occupation name"
+      />
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="description" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Descripción:</label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="4"
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          ></textarea>
-        </div>
+      <label htmlFor="type" className="block mb-2 font-semibold text-gray-700">
+        Type <span className="text-red-500">*</span>
+      </label>
+      <input
+        id="type"
+        type="text"
+        value={type}
+        onChange={e => setType(e.target.value)}
+        required
+        className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+        placeholder="Enter occupation type"
+      />
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="status" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Estado:</label>
-          <select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          >
-            <option value="">Selecciona un estado</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
-        </div>
+      <label htmlFor="description" className="block mb-2 font-semibold text-gray-700">
+        Description
+      </label>
+      <textarea
+        id="description"
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        rows="4"
+        className="mb-4 w-full px-3 py-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+        placeholder="Enter a description (optional)"
+      ></textarea>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label htmlFor="ubication" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ubicación:</label>
-          <input
-            type="text"
-            id="ubication"
-            value={ubication}
-            onChange={(e) => setUbication(e.target.value)}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
+      <label htmlFor="status" className="block mb-2 font-semibold text-gray-700">
+        Status <span className="text-red-500">*</span>
+      </label>
+      <select
+        id="status"
+        value={status}
+        onChange={e => setStatus(e.target.value)}
+        required
+        className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+      >
+        <option value="">Select status</option>
+        <option value="1">Active</option>
+        <option value="0">Inactive</option>
+      </select>
 
-        <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
-          Actualizar
-        </button>
-      </form>
-    </div>
-  );
+      <label htmlFor="ubication" className="block mb-2 font-semibold text-gray-700">
+        Location <span className="text-red-500">*</span>
+      </label>
+      <input
+        id="ubication"
+        type="text"
+        value={ubication}
+        onChange={e => setUbication(e.target.value)}
+        required
+        className="mb-6 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+        placeholder="Enter location"
+      />
+
+      <button
+        type="submit"
+        className="w-full py-3 text-white font-semibold rounded bg-red-600 hover:bg-red-700 transition-colors duration-300"
+      >
+        Update
+      </button>
+    </form>
+  </div>
+);
 }
 
 export default FormularioComponenteEdicion;

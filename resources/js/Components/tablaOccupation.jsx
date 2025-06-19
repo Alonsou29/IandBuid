@@ -3,6 +3,7 @@ import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import FormularioComponente from "@/Components/FormularioOccupation";
+import FormularioComponenteEdicion from "@/Components/formUpdateOccupation"; // Ruta correcta
 
 const MySwal = withReactContent(Swal);
 
@@ -12,6 +13,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
 
  const handleCrearClick = () => {
     MySwal.fire({
+      allowOutsideClick: false,
       html: (
         <FormularioComponente 
           onSuccess={(newOccupation) => {
@@ -112,36 +114,62 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       button: true,
       center: true,
     },
-    {
-      name: 'Modify',
-      cell: row => (
-        <button
-          className="p-1 rounded hover:bg-yellow-500 transition-colors"
-          onClick={async () => {
-            // acción para modificar
-            await axios.get(`modifyOccupation/${row.id}`);
-          }}
-          aria-label="Modificar"
-        >
-          {/* Ícono de lápiz */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-yellow-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3.536 3.536-6 6H9v-3.536z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16v4h4l11-11-4-4-11 11z" />
-          </svg>
-        </button>
-      ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-      center: true,
-    },
+{
+  name: 'Modify',
+  cell: row => (
+    <button
+      className="p-1 rounded hover:bg-yellow-800 transition-colors"
+      onClick={() => {
+        MySwal.fire({
+          allowOutsideClick: false,
+          html: (
+            <FormularioComponenteEdicion
+              recursoId={row.id}
+              onSuccess={(updatedOccupation) => {
+                MySwal.close();
+
+                // ✅ Actualizar la ocupación modificada en el estado
+                setOccupations(prev =>
+                  prev.map(o => o.id === updatedOccupation.id ? updatedOccupation : o)
+                );
+
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Success',
+                  text: 'Occupation updated successfully!',
+                });
+              }}
+            />
+          ),
+          showConfirmButton: false,
+          showCloseButton: true,
+          width: '800px',
+          customClass: {
+            popup: 'swal2-no-padding'
+          }
+        });
+      }}
+      aria-label="Modificar"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5 text-yellow-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3.536 3.536-6 6H9v-3.536z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16v4h4l11-11-4-4-11 11z" />
+      </svg>
+    </button>
+  ),
+  ignoreRowClick: true,
+  allowOverflow: true,
+  button: true,
+  center: true,
+}
+
   ];
 
   const handleRowClick = async (row) => {

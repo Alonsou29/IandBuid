@@ -55,17 +55,17 @@ export default function Jobs({ occupations }) {
                 <h2 className="text-xl font-semibold text-red-600 mb-2">
                   {job.name}
                 </h2>
-<p className="mb-2">
-  <strong>Type:</strong>{" "}
-  {job.type.split(',').map((tipo, i) => (
-    <span
-      key={i}
-      className="inline-block bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
-    >
-      {tipo.trim()}
-    </span>
-  ))}
-</p>
+                <p className="mb-2">
+                  <strong>Type:</strong>{" "}
+                  {job.type.split(',').map((tipo, i) => (
+                    <span
+                      key={i}
+                      className="inline-block bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
+                    >
+                      {tipo.trim()}
+                    </span>
+                  ))}
+                </p>
 
                 <p className="text-sm text-gray-700 mb-1">
                   <strong>Location:</strong> {job.ubication}
@@ -93,13 +93,17 @@ export default function Jobs({ occupations }) {
               <button
                 onClick={() =>
                   MySwal.fire({
-                    title: "Apply to Job",
-                    html: <Formulario selectedJob={job.name} />,
+                    title: "APPLICANT:",
+                    html: <Formulario selectedJob={job} />,
                     showConfirmButton: false,
                     showCloseButton: true,
+                    allowOutsideClick: false,
+                    heightAuto: false,
                     width: "80%",
+                    background: '#f0f0f0', // Fondo gris del modal
+                    backdrop: 'rgba(0, 0, 0, 0.4)', // Fondo oscuro detrás
                     customClass: {
-                      popup: 'overflow-auto max-h-[90vh] p-4',
+                      popup: 'overflow-auto max-h-[90vh] p-4 fixed-height-modal' ,
                     },
                   })
                 }
