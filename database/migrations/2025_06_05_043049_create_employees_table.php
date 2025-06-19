@@ -22,8 +22,9 @@ return new class extends Migration
             $table->boolean('apply_occupations')->nullable();
             $table->boolean('avaible_travel');
             $table->boolean('military_services');
-            $table->string('start_services')->nullable();
-            $table->string('end_services')->nullable();
+            $table->string('airport');
+            $table->date('start_services')->nullable();
+            $table->date('end_services')->nullable();
             $table->string('military_desc')->nullable();
             $table->string('contract_url');
             $table->boolean('status');

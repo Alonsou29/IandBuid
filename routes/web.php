@@ -28,18 +28,20 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/createOccupation',[OccupationController::class, 'create']);
-    Route::put('/updateOccupation/{id}',[OccupationController::class, 'update']);
     Route::delete('/deleteOccupation/{id}',[OccupationController::class, 'destroy']);
     Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations'])->name('occupations.index');
 });
 
+
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
+Route::put('/modifyEmployee/{id}',[EmployeeController::class, 'updateEmployee']);
 Route::get('/listarEmployeeSocialId/{id}',[EmployeeController::class, 'employeeBySocialId']);
-Route::get('/listarEmployee',[EmployeeController::class, 'listarEmployees']);
-Route::get('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
+Route::get('/listarEmployee',[EmployeeController::class, 'listaEmployees']);
+Route::put('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
 //occupations
 Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
 Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');
+Route::put('/updateOccupation/{id}',[OccupationController::class, 'updateOccupation']);
 
 Route::get('/prueba', function (){
     $employee = Employee::create([

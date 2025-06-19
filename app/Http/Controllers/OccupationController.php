@@ -12,11 +12,7 @@ class OccupationController extends Controller
         $Occupation=Occupation::all();
 
         $mapeo = $Occupation->map(function ($item) use ($Occupation){
-            if($item['status']==1){
-                $item['status'] = 'Activo';
-            }else{
-                $item['status'] = 'Inactivo';
-            }
+            $item['status'] = $item['status'] == 1 ? 'Acitvo':'Inactivo'; 
         });
 
         return Inertia::render("Occupations", ["occupations"=>$Occupation]);
@@ -26,7 +22,6 @@ class OccupationController extends Controller
         $Occupations = Occupation::all();
 
         $mapped = $Occupations->map(function ($item) {
-
             $item->status = $item->status == 1 ? 'Activo' : 'Inactivo';
             return $item;
         });
@@ -52,21 +47,22 @@ class OccupationController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function updateOccupation(Request $request, $id){
 
         try{
             $Occupation = Occupation::find($id);
 
-            if($Occupation->name != $request->name){
-                $Occupation->name = $request->name;
-            }
-            if($Occupation->status != $request->status){
-                $Occupation->status = $request->status;
-            }
-            if($Occupation->type != $request->type){
-                $Occupation->type = $request->type;
+            if(!$Occupation){
+                return response()->json(["msg"=>"id not found"],421);
             }
 
+            $Occupation->name = $request->name;
+            $Occupation->type = $request->type;
+            $Occupation->description = $request->description;
+            $Occupation->ubication = $request->ubication;
+            $Occupation->status = $request->status;
+            // $Occupation->isDelete = $request->isDelete;
+        
             $Occupation->save();
 
             return response()->json(['msg'=>'Update Success!','data'=>$Occupation],200);
@@ -76,12 +72,12 @@ class OccupationController extends Controller
         }
     }
 
-    public function destroy(Request $request, $id){
+    public function deleteOccupation(Request $request, $id){
         try{
             $Occupation=Occupation::find($id);
-
-            $Occupation->delete();
-
+            $Occupation->isDelete = true;
+            $Occupation->save();
+            
             return response()->json(['msg'=>'Occupation Delete Success!'],200);
 
         }catch(ValidationException $e){

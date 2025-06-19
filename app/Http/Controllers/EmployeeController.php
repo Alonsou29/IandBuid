@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 
 class EmployeeController extends Controller
 {
 
-    public function listarEmployees(){
+    public function listaEmployees(){
         try{
             $Employee = Employee::all();
             return Inertia::render("Employees", ["employees"=>$Employee]);
@@ -46,11 +47,11 @@ class EmployeeController extends Controller
                 'email' => $request->email,
                 'age'=> 20,
                 'birthday'=>$request->dob,
-                'apply_occupations'=>true,
-                'avaible_travel'=>true,
+                'apply_occupations'=>false,
+                'avaible_travel'=>$request->willingToTravel,
                 'military_services'=>$request->dfac,
-                'start_services'=>'10/03/2020',
-                'end_services'=>'20/03/2023',
+                'start_services'=>$request->start_date,
+                'end_services'=>$request->end_date,
                 'military_desc'=>'terrestre',
                 'contract_url'=>'',
                 'status'=>true,
@@ -92,7 +93,12 @@ class EmployeeController extends Controller
 
     }
 
-    
+    public function updateEmployee(Request $request, $socialId){
+        $employee = Employee::find($socialId);
+
+
+        return response()->json(["msg"=>$employee],201);
+    }
 
     public function deleteEmployee(Request $request, $socialId){
         $Employee = Employee::find($socialId);
