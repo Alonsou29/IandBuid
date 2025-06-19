@@ -12,7 +12,10 @@ class Occupation extends Model
 
     protected $fillable = [
         'name',
-        'type'
+        'description',
+        'type',
+        'status',
+        'ubication',
     ];
 
     public function employees():BelongsToMany{

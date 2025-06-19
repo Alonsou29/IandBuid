@@ -1,169 +1,111 @@
 import React, { useState, useMemo } from "react";
 import DataTable from "react-data-table-component";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-import FormularioComponente from "@/Components/FormularioOccupation";
 
-const MySwal = withReactContent(Swal);
-
-export default function TablaOccupations({ occupations, setOccupations, onOccupationSeleccionado }) {
+export default function TablaOccupations({ occupations, onOccupationSeleccionado }) {
   const [filterText, setFilterText] = useState('');
-  const [selectedRow, setSelectedRow] = useState(null);
-
- const handleCrearClick = () => {
-    MySwal.fire({
-      html: (
-        <FormularioComponente 
-          onSuccess={(newOccupation) => {
-            // Cerrar el modal
-            MySwal.close();
-            // Actualizar el estado con el nuevo elemento agregado
-            setOccupations(prev => [...prev, newOccupation]);
-            Swal.fire({
-              icon: 'success',
-              title: 'Success',
-              text: 'Occupation created and table updated!',
-            });
-          }}
-        />
-      ),
-      showConfirmButton: false,
-      showCloseButton: true,
-      width: '800px',
-      customClass: {
-        popup: 'swal2-no-padding'
-      }
-    });
-  };
-
+  const [tableData, setTableData] = useState(occupations);
+  const [selectedRow, setSelectedRow] = useState();
+  console.log(occupations);
   const filteredData = useMemo(() => {
-    if (!filterText) return occupations;
-    const lowerFilter = filterText.toLowerCase();
-    return occupations.filter(item =>
+    if (!filterText) return tableData;
+    return tableData.filter(item =>
       Object.values(item).some(
-        val => val && val.toString().toLowerCase().includes(lowerFilter)
+        val => val && val.toString().toLowerCase().includes(filterText.toLowerCase())
       )
     );
-  }, [filterText, occupations]);
+  }, [filterText, tableData]);
 
   const columns = [
     {
       name: 'Id',
       selector: row => row.id,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.id}</div>,
     },
     {
       name: 'Name',
       selector: row => row.name,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.name}</div>,
     },
     {
       name: 'Type',
       selector: row => row.type,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.type}</div>,
     },
     {
       name: 'Description',
       selector: row => row.description,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.description}</div>,
     },
     {
       name: 'Ubication',
       selector: row => row.ubication,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.ubication}</div>,
     },
     {
       name: 'Status',
-      selector: row => row.status === 1 ? 'Active' : 'Inactive',
+      selector: row => row.status,
       sortable: true,
-      center: true,
+      cell: row => <div className="text-center">{row.status}</div>,
     },
     {
-      name: 'Delete',
+      name: 'delete',
       cell: row => (
-        <button
-          className="p-1 rounded hover:bg-red-700 transition-colors"
-          onClick={async () => {
-            // confirmación opcional aquí
-            await axios.delete(`deleteOccupation/${row.id}`);
-          }}
-          aria-label="Eliminar"
-        >
-          {/* Ícono de basurero */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+        <div className="w-full flex justify-center">
+          <button
+            className="bg-red-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+            onClick={async () => await axios.delete(`deleteOccupation/${row.id}`)}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
-          </svg>
-        </button>
+            delete
+          </button>
+        </div>
       ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-      center: true,
     },
-    {
+        {
       name: 'Modify',
       cell: row => (
-        <button
-          className="p-1 rounded hover:bg-yellow-500 transition-colors"
-          onClick={async () => {
-            // acción para modificar
-            await axios.get(`modifyOccupation/${row.id}`);
-          }}
-          aria-label="Modificar"
-        >
-          {/* Ícono de lápiz */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-yellow-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+        <div className="w-full flex justify-center">
+          <button
+            className="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+            onClick={async () => await axios.get(`deleteOccupation/${row.id}`)}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3.536 3.536-6 6H9v-3.536z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16v4h4l11-11-4-4-11 11z" />
-          </svg>
-        </button>
+            Modify
+          </button>
+        </div>
       ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-      center: true,
     },
   ];
 
-  const handleRowClick = async (row) => {
-    if (selectedRow?.id === row.id) {
-      setSelectedRow(null);
-      onOccupationSeleccionado && onOccupationSeleccionado(null);
-    } else {
-      setSelectedRow(row);
-      try {
-        const response = await axios.get('', { params: { idOccupation: row.id } });
-        onOccupationSeleccionado && onOccupationSeleccionado(response.data);
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
+  const handleRowClick = async(row)=>{
+      if (selectedRow && selectedRow.id === row.id) {
+        setSelectedRow(null);
+        onOccupationSeleccionado && onOccupationSeleccionado(null);
+      } else {
+        setSelectedRow(row);
+        try {
+          const response = await axios.get('', {
+            params: { idOccupation: row.id }
+          });
+        console.log(row.codigo)
+        console.log(response.data)
+          onOccupationSeleccionado && onOccupationSeleccionado(response.data);
+        } catch (error) {
+          console.error('Error al cargar el histórico de facturas:', error);
+        }
       }
-    }
-  };
+  }
+
+
 
   const customStyles = {
     headCells: {
       style: {
-        backgroundColor: '#b91c1c', // rojo oscuro
-        color: '#fef2f2',           // rojo muy claro casi blanco
+        backgroundColor: '#1E3A8A',
+        color: 'white',
         fontWeight: 'bold',
         fontSize: '14px',
         justifyContent: 'center',
@@ -175,62 +117,66 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
         textAlign: 'center',
       },
       highlightOnHoverStyle: {
-        backgroundColor: '#fee2e2', // rojo muy suave para hover
-        borderBottomColor: '#fca5a5',
-        outline: '1px solid #b91c1c',
+        backgroundColor: '#ffe5e5',
+        borderBottomColor: '#ffcccc',
+        outline: '1px solid #e60000',
       },
     },
     pagination: {
       style: {
-        fontSize: '12px'
+        fontSize: '12px',
+        color: '#4B5563',
       },
     },
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-lg w-full flex flex-col">
-      <div className="flex justify-between items-center border-b-4 border-red-700 pb-2">
-        <h2 className="text-xl font-bold text-red-800"></h2>
-        <button
-          onClick={handleCrearClick}
-          className="bg-green-600 text-white px-4 py-2 rounded-md shadow hover:bg-red-700 transition-colors font-semibold"
-        >
-          Crear
-        </button>
+      <div className="flex justify-between items-center border-b-4 border-sky-600 pb-2">
+        <h2 className="text-xl font-bold text-gray-800">Occupations:</h2>
       </div>
 
-      <div className="mt-4 flex justify-start">
-        <div className="mb-4 flex items-center bg-gray-100 rounded-full px-3 py-1 w-[280px]">
+      <div className="relative mr-10 justify-start items-start bg-blue-50">
+        <a href="/formularioOccupation">crear</a>
+      </div>
+
+
+      <div className="mt-4">
+        <div className="mb-4 flex items-center bg-gray-100 rounded-full px-2 py-1 w-[280px]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-black"
+            className="h-4 w-4 text-gray-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z"
+            />
           </svg>
           <input
             type="text"
             value={filterText}
             onChange={e => setFilterText(e.target.value)}
             placeholder="Buscar..."
-            className="bg-gray-100 w-full text-sm focus:outline-none focus:ring-0 border-none ml-2"
+            className="bg-gray-100 w-full text-sm focus:outline-none focus:ring-0 border-none"
+            style={{ width: '0px', paddingLeft: '4px', flex: 1 }}
           />
         </div>
-      </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        pagination
-        onRowClicked={handleRowClick}
-        pointerOnHover
-        highlightOnHover
-        customStyles={customStyles}
-        selectableRows={false}
-        persistTableHead
-      />
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          pagination
+          onRowClicked={handleRowClick}
+          pointerOnHover
+          highlightOnHover
+          customStyles={customStyles}
+        />
+      </div>
     </div>
   );
 }

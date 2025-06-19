@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\OccupationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,7 +35,7 @@ Route::get('/formularioOccupation', function () {return Inertia::render('OccuFor
 Route::post('/createOccupation',[OccupationController::class, 'create']);
 Route::put('/updateOccupation/{id}',[OccupationController::class, 'update']);
 Route::delete('/deleteOccupation/{id}',[OccupationController::class, 'destroy']);
-Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations'])->name('occupations.index');
+Route::get('/listaOccupation',[OccupationController::class, 'listarOccupations']);
 Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');
 
 Route::get('/prueba', function (){

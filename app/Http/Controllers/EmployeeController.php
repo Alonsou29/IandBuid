@@ -12,6 +12,12 @@ use Illuminate\Validation\ValidationException;
 
 class EmployeeController extends Controller
 {
+
+    public function store(){
+
+    }
+
+
     public function createEmployee(Request $request){
         try{
             $validateData = $request->validate([
@@ -45,27 +51,10 @@ class EmployeeController extends Controller
                 'zip'=>$request->zip
             ]);
 
-            return response()->json([$request->socialId], 201);
+            return response()->json([$request->social_id], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
 
-        // $employee = Employee::create([
-        // 'social_id'=>'',
-        // 'name'=>'Alonso',
-        // 'lastname'=>'Urdaneta',
-        // 'phone_number'=>'04246228729',
-        // 'email' => 'soyunxd@hotmail.com',
-        // 'age'=> 20,
-        // 'birthday'=>'2003-03-23',
-        // 'apply_occupations'=>true,
-        // 'avaible_travel'=>true,
-        // 'military_services'=>true,
-        // 'start_services'=>'10/03/2020',
-        // 'end_services'=>'20/03/2023',
-        // 'military_desc'=>'terrestre',
-        // 'contract_url'=>'~/micontrato/contrattofulanito.pdf',
-        // 'status'=>true,
-    // ]);
     }
 }

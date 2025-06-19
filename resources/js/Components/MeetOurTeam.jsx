@@ -82,16 +82,6 @@ Outside of work, Mayzee has also served as a dance instructor and assistant chee
 ];
 
 const MeetOurTeam = () => {
-
- const [expandedStates, setExpandedStates] = useState({});
-
-  const toggleExpanded = (index) => {
-    setExpandedStates((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
   const settings = {
     dots: false,
     infinite: true,
@@ -103,55 +93,39 @@ const MeetOurTeam = () => {
   };
 
   return (
-    <section className="bg-black py-12 px-6 sm:px-12" id="team">
-      <h2 className="text-center text-4xl font-bold mb-8 font-spartan text-white">
-        Meet Our Team
-      </h2>
-      <Slider {...settings}>
-        {teamMembers.map((member, index) => {
-          const isExpanded = expandedStates[index];
-          const previewText = member.description.slice(0, 800);
-
-          return (
-            <div key={index} className="w-full block">
-              <div className="flex flex-col md:flex-row items-start justify-between gap-8 p-6 max-w-6xl mx-auto">
-                {/* Imagen a la izquierda */}
-                <div className="md:w-1/2">
-                  <img src={member.image} alt={member.name} className="rounded-lg shadow-md w-full h-auto object-cover" />
-                </div>
-
-                {/* Texto a la derecha */}
-                <div className="w-full md:w-1/2 text-white flex flex-col justify-between h-full">
-                  <div>
-                    <h3 className="text-5xl font-bold mb-2 text-center">{member.name}</h3>
-                    <p className="text-2xl font-semibold mb-4 text-center text-red-400">{member.title}</p>
-                    <p className="text-xl text-gray-300 mb-10">
-                      <strong>Phone:</strong> {member.phone}
-                    </p>
-                    <p className="text-xl mb-4 text-gray-200 text-justify">
-                      {isExpanded ? member.description : previewText + (member.description.length > 350 ? '...' : '')}
-                    </p>
-                    {member.description.length > 350 && (
-                      <button
-                        onClick={() => toggleExpanded(index)}
-                        className="text-red-400 hover:underline text-lg"
-                      >
-                        {isExpanded ? 'Ver menos ▲' : 'Ver más ▼'}
-                      </button>
-                    )}
-                  </div>
-                  {member.email && (
-                    <p className="text-xl text-gray-300 mt-8">
-                      <strong>Email:</strong> {member.email}
-                    </p>
-                  )}
-                </div>
-              </div>
+<section className="bg-black py-12 px-6 sm:px-12" id="team">
+  <h2 className="text-center text-4xl font-bold mb-8 font-spartan text-white">
+    Meet Our Team
+  </h2>
+  <Slider {...settings}>
+    {teamMembers.map((member, index) => (
+      <div key={index} className="w-full block">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-8 p-6 max-w-6xl mx-auto">
+          {/* Imagen a la izquierda */}
+            <div className="md:w-1/2">
+              <img src={member.image} alt={member.name} className="rounded-lg shadow-md w-full h-auto object-cover" />
             </div>
-          );
-        })}
-      </Slider>
-    </section>
+
+          {/* Texto a la derecha */}
+          <div className="w-full md:w-1/2 text-white">
+            <h3 className="text-5xl font-bold mb-2 text-center">{member.name}</h3>
+            <p className="text-2xl font-semibold mb-4 text-center text-red-400">{member.title}</p>
+            <p className="text-xl text-gray-300 mb-10">
+              <strong>Phone:</strong> {member.phone}
+            </p>
+            <p className="text-xl mb-4 text-gray-200 text-justify">{member.description}</p>
+            {member.email && (
+              <p className="text-xl text-gray-300 mt-8">
+                <strong>Email:</strong> {member.email}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </Slider>
+</section>
+
   );
 };
 
