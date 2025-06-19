@@ -13,7 +13,18 @@ use Illuminate\Validation\ValidationException;
 class EmployeeController extends Controller
 {
 
-    public function store(){
+    public function listarEmployee(){
+        try{
+            $Employee = Employee::all();
+            return Inertia::render("Employees", ["employees"=>$Employee]);
+        }catch(ValidationException $e){
+            return response()->json([$e],400);
+        }
+    }
+
+    public function employee_by_socialId(Request $request,$socialId){
+        $Employee = Employee::find($socialId);
+
 
     }
 
@@ -26,6 +37,7 @@ class EmployeeController extends Controller
                 'lastName'=>['required','string', 'max:255'],
                 'dob'=>['required'],
             ]);
+
             $employee = Employee::create([
                 'social_id'=>$request->social_id,
                 'name'=>$request->firstName,
@@ -36,14 +48,13 @@ class EmployeeController extends Controller
                 'birthday'=>$request->dob,
                 'apply_occupations'=>true,
                 'avaible_travel'=>true,
-                'military_services'=>true,
+                'military_services'=>$request->dfac,
                 'start_services'=>'10/03/2020',
                 'end_services'=>'20/03/2023',
                 'military_desc'=>'terrestre',
                 'contract_url'=>'',
                 'status'=>true,
             ]);
-
             $address = $employee->addresses()->create([
                 'state'=>$request->state,
                 'city'=>$request->city,
@@ -51,7 +62,17 @@ class EmployeeController extends Controller
                 'zip'=>$request->zip
             ]);
 
-            return response()->json([$request->social_id], 201);
+            $ref = $request->references;
+
+            foreach($ref as $person){
+               $reference = $employee->references()->create([
+                'fullname'=>$person['name'],
+                'phone_number'=>$person['phone'],
+                'email'=>$person['email']
+                ]);
+            }
+
+            return response()->json([$ref], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }

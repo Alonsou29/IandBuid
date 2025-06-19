@@ -32,7 +32,7 @@ export default function Formulario({ selectedJob }) {
     zip: '',
     email: '',
     phone: '',
-    willingToTravel: '', 
+    willingToTravel: '',
     dfac: '',
     branch: '',
     airport: '',
@@ -86,7 +86,7 @@ const handleNext = (e) => {
     setFiles(updated);
   };
 
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,7 +114,9 @@ const handleNext = (e) => {
       return;
     }
 
-    // const response = await axios.post('/createEmployee', formData);
+    formData.dfac = formData.dfac === 'Yes' ? 1:0;
+
+    const response = await axios.post('/createEmployee', formData);
     console.log('Cliente registrado:', formData);
     MySwal.fire('Success', 'Form submitted successfully!', 'success');
   };
@@ -273,7 +275,7 @@ const handleNext = (e) => {
           <label className="block font-semibold mb-1">1. Did you have military experience?</label>
           <div className="space-y-1 mb-4">
             {['Yes', 'No'].map((option) => (
-              <label key={option} className="block"><input type="radio" name="experincemilitary" value={option} checked={formData.dfac === option} onChange={handleChange} className="mr-2" />{option}</label>
+              <label key={option} className="block"><input type="radio" name="dfac" value={option} checked={formData.dfac === option} onChange={handleChange} className="mr-2" />{option}</label>
             ))}
           </div>
 

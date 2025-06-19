@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('street');
             $table->string('zip');
             $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
+            $table->boolean('isDelete')->default(false);;
             $table->timestamps();
         });
     }

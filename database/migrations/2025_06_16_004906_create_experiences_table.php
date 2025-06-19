@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('experiences', function (Blueprint $table) {
             $table->id();
+            $table->uuid('employer_id');
+            $table->string('employer_name');
+            $table->string('phone_number')->nulleable();
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->string('title');
+            $table->string('Duties');
+            $table->text('reason_leaving');
+            $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
+            $table->boolean('isDelete')->default(false);;
             $table->timestamps();
         });
     }

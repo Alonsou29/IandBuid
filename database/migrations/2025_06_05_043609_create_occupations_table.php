@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('ubication');
             $table->boolean('status');
+            $table->boolean('isDelete')->default(false);;
             $table->timestamps();
         });
     }

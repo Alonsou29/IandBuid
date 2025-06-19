@@ -22,6 +22,5 @@ class Address extends Model
 
     public function Employee():BelongsTo{
         $this->belongsTo(Employee::class, 'employee_id','social_id');
-
     }
 }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('email');
             $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
+            $table->boolean('isDelete')->default(false);
             $table->timestamps();
         });
     }

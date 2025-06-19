@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('employee_id');
             $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
             $table->foreignId('occupation_id')->constrained()->onDelete('cascade');
+            $table->boolean('isDelete')->default(false);
             $table->timestamps();
         });
     }

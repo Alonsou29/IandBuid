@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Occupation;
 use App\Models\Address;
+use App\Models\Reference;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -41,5 +42,9 @@ class Employee extends Model
 
     public function addresses():HasMany{
         return $this->hasMany(Address::class,'employee_id','social_id');
+    }
+
+    public function references():HasMany{
+        return $this->hasMany(Reference::class,'employee_id','social_id');
     }
 }

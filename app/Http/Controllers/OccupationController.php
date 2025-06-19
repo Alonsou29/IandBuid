@@ -22,12 +22,11 @@ class OccupationController extends Controller
         return Inertia::render("Occupations", ["occupations"=>$Occupation]);
     }
 
-        public function vistaOccupations()
-    {
+    public function vistaOccupations(){
         $Occupations = Occupation::all();
 
-
         $mapped = $Occupations->map(function ($item) {
+
             $item->status = $item->status == 1 ? 'Activo' : 'Inactivo';
             return $item;
         });
