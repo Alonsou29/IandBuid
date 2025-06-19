@@ -55,15 +55,34 @@ export default function Jobs({ occupations }) {
                 <h2 className="text-xl font-semibold text-red-600 mb-2">
                   {job.name}
                 </h2>
-                <p className="text-sm text-gray-700 mb-1">
-                  <strong>Type:</strong> {job.type}
-                </p>
+<p className="mb-2">
+  <strong>Type:</strong>{" "}
+  {job.type.split(',').map((tipo, i) => (
+    <span
+      key={i}
+      className="inline-block bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
+    >
+      {tipo.trim()}
+    </span>
+  ))}
+</p>
+
                 <p className="text-sm text-gray-700 mb-1">
                   <strong>Location:</strong> {job.ubication}
                 </p>
                 <p className="text-sm text-gray-700 mb-3">
-                  <strong>Status:</strong> {job.status}
+                  <strong>Status:</strong>{" "}
+                  {job.status === 1 ? (
+                    <span className="inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">
+                      Disponible
+                    </span>
+                  ) : (
+                    <span className="inline-block bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full">
+                      No disponible
+                    </span>
+                  )}
                 </p>
+
                 {job.description && (
                   <p className="text-gray-600 text-sm mb-4">
                     {job.description}

@@ -1,112 +1,134 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
-function FormularioComponente() {
+function FormularioComponente({ onSuccess }) {
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('');
   const [ubication, setUbication] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const datosFormulario = {
-      name,
-      type,
-      description,
-      status,
-      ubication,
-    };
-    console.log('Datos del formulario enviados:', datosFormulario);
+    if (!name || !type || !status || !ubication) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Required Fields',
+        text: 'Please fill out the required fields: Name, Type, Status, and Location.',
+      });
+      return;
+    }
 
-    const response = await axios.post('/createOccupation', datosFormulario);
-    console.log(response);
-    setName('');
-    setType('');
-    setDescription('');
-    setStatus('');
-    setUbication('');
+    const datosFormulario = { name, type, description, status, ubication };
+
+    try {
+      setLoading(true);
+      const response = await axios.post('/createOccupation', datosFormulario);
+      setLoading(false);
+
+      // Llama onSuccess con la ocupación nueva recibida del backend
+      if (onSuccess) onSuccess(response.data);
+      console.log("Nueva ocupación:", response.data);
+
+
+      // Limpia formulario (opcional si el modal se cierra)
+      setName('');
+      setType('');
+      setDescription('');
+      setStatus('');
+      setUbication('');
+    } catch (error) {
+      setLoading(false);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'There was a problem submitting the data, please try again.',
+      });
+      console.error(error);
+    }
   };
-
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: 'auto', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Formulario de Datos</h2>
+    <div className="p-6 max-w-full mx-auto bg-white rounded-lg shadow-lg">
+      <h2 className="text-2xl font-semibold mb-6 text-center text-red-700">Data Form</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="nombre" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre:</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="type" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Tipo:</label>
-          <input
-            type="text"
-            id="type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
+        <label htmlFor="name" className="block mb-2 font-semibold text-gray-700">
+          Name <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          required
+          className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Enter name"
+        />
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="description" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Descripción:</label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="4"
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          ></textarea>
-        </div>
+        <label htmlFor="type" className="block mb-2 font-semibold text-gray-700">
+          Type <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="type"
+          type="text"
+          value={type}
+          onChange={e => setType(e.target.value)}
+          required
+          className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Enter type"
+        />
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="status" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Estado:</label>
-          <select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          >
-            <option value="">Selecciona un estado</option>
-            <option value={1}>Activo</option>
-            <option value={0}>Inactivo</option>
-          </select>
-        </div>
+        <label htmlFor="description" className="block mb-2 font-semibold text-gray-700">
+          Description
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          rows="4"
+          className="mb-4 w-full px-3 py-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Enter description"
+        />
 
-        <div style={{ marginBottom: '20px' }}>
-          <label htmlFor="ubication" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ubicación:</label>
-          <input
-            type="text"
-            id="ubication"
-            value={ubication}
-            onChange={(e) => setUbication(e.target.value)}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-        </div>
+        <label htmlFor="status" className="block mb-2 font-semibold text-gray-700">
+          Status <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="status"
+          value={status}
+          onChange={e => setStatus(e.target.value)}
+          required
+          className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          <option value="">Select a status</option>
+          <option value={1}>Active</option>
+          <option value={0}>Inactive</option>
+        </select>
+
+        <label htmlFor="ubication" className="block mb-2 font-semibold text-gray-700">
+          Location <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="ubication"
+          type="text"
+          value={ubication}
+          onChange={e => setUbication(e.target.value)}
+          className="mb-6 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+          placeholder="Enter location"
+          required
+        />
 
         <button
           type="submit"
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
+          disabled={loading}
+          className={`w-full py-3 text-white font-semibold rounded ${
+            loading ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+          } transition-colors duration-300`}
         >
-          Enviar
+          {loading ? 'Submitting...' : 'Submit'}
         </button>
       </form>
     </div>

@@ -46,7 +46,8 @@ class OccupationController extends Controller
                 'status'=> (int) $request->status
             ]);
 
-            return response()->json([$createOccupation->name],201);
+        return response()->json($createOccupation, 201);
+
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
