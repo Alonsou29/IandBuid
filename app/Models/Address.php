@@ -16,7 +16,8 @@ class Address extends Model
         'state',
         'city',
         'street',
-        'zip'
+        'zip',
+        'isDelete'
     ];
 
 

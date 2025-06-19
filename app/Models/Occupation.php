@@ -16,6 +16,7 @@ class Occupation extends Model
         'type',
         'status',
         'ubication',
+        'isDelete',
     ];
 
     public function employees():BelongsToMany{

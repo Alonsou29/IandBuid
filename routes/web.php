@@ -34,6 +34,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
+Route::get('/listarEmployeeSocialId/{id}',[EmployeeController::class, 'employeeBySocialId']);
+Route::get('/listarEmployee',[EmployeeController::class, 'listarEmployees']);
+Route::get('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
 //occupations
 Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
 Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');

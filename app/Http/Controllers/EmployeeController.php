@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 class EmployeeController extends Controller
 {
 
-    public function listarEmployee(){
+    public function listarEmployees(){
         try{
             $Employee = Employee::all();
             return Inertia::render("Employees", ["employees"=>$Employee]);
@@ -22,12 +22,11 @@ class EmployeeController extends Controller
         }
     }
 
-    public function employee_by_socialId(Request $request,$socialId){
+    public function employeeBySocialId(Request $request,$socialId){
         $Employee = Employee::find($socialId);
 
-
+        return response()->json(['employee'=>$Employee],200);
     }
-
 
     public function createEmployee(Request $request){
         try{
@@ -36,6 +35,7 @@ class EmployeeController extends Controller
                 'firstName'=>['required','string','max:255'],
                 'lastName'=>['required','string', 'max:255'],
                 'dob'=>['required'],
+                'email'=>['required','unique:'.Employee::class]
             ]);
 
             $employee = Employee::create([
@@ -63,6 +63,7 @@ class EmployeeController extends Controller
             ]);
 
             $ref = $request->references;
+            $works = $request->workHistory;
 
             foreach($ref as $person){
                $reference = $employee->references()->create([
@@ -72,10 +73,31 @@ class EmployeeController extends Controller
                 ]);
             }
 
-            return response()->json([$ref], 201);
+            foreach($works as $work){
+                $work = $employee->workHistory()->create([
+                    'emplo_name'=>$work['employer'],
+                    'phone_number'=>$work['phone'],
+                    'start_work'=>$work['start'],
+                    'end_work'=>$work['end'],
+                    'title'=>$work['title'],
+                    'duties'=>$work['duties'],
+                    'reason_leaving'=>$work['reason'],
+                ]);
+            }
+
+            return response()->json(['msg'=>$ref], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
 
+    }
+
+    
+
+    public function deleteEmployee(Request $request, $socialId){
+        $Employee = Employee::find($socialId);
+        $Employee->isDelete = true;
+        $Employee->save();
+        return response()->json(['msg'=>'Delete Success!!', 'payload'=>$Employee],200);
     }
 }

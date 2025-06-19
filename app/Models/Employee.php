@@ -47,4 +47,8 @@ class Employee extends Model
     public function references():HasMany{
         return $this->hasMany(Reference::class,'employee_id','social_id');
     }
+
+    public function workHistory():HasMany{
+        return $this->hasMany(Experience::class,'employee_id','social_id');
+    }
 }
