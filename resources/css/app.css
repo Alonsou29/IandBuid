@@ -22,3 +22,6 @@ html {
   font-size: 30px; /* tamaño opcional */
 }
 
+.fixed-height-modal {
+  height: 750px; /* o el valor que necesites */
+}
