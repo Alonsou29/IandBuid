@@ -160,8 +160,8 @@ const handleRemoveCertFile = (index) => {
     }
 
     formData.dfac = formData.dfac === 'Yes' ? 1:0;
-
-    // const response = await axios.post('/createEmployee', formData);
+    formData.willingToTravel = formData.willingToTravel === 'yes' ? 1:0;
+    const response = await axios.post('/createEmployee', formData);
     console.log('Cliente registrado:', formData);
     MySwal.fire('Success', 'Form submitted successfully!', 'success');
   };

@@ -15,7 +15,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
     MySwal.fire({
       allowOutsideClick: false,
       html: (
-        <FormularioComponente 
+        <FormularioComponente
           onSuccess={(newOccupation) => {
             // Cerrar el modal
             MySwal.close();
@@ -92,7 +92,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
           className="p-1 rounded hover:bg-red-700 transition-colors"
           onClick={async () => {
             // confirmación opcional aquí
-            await axios.delete(`deleteOccupation/${row.id}`);
+            await axios.delete(`/deleteOccupation/${row.id}`);
           }}
           aria-label="Eliminar"
         >

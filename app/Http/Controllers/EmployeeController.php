@@ -16,7 +16,7 @@ class EmployeeController extends Controller
 
     public function listaEmployees(){
         try{
-            $Employee = Employee::all();
+            $Employee = Employee::select('name', 'social_id', 'avaible_travel')->get();
             return Inertia::render("Employees", ["employees"=>$Employee]);
         }catch(ValidationException $e){
             return response()->json([$e],400);
@@ -49,9 +49,10 @@ class EmployeeController extends Controller
                 'birthday'=>$request->dob,
                 'apply_occupations'=>false,
                 'avaible_travel'=>$request->willingToTravel,
+                'airport'=>$request->airport,
                 'military_services'=>$request->dfac,
-                'start_services'=>$request->start_date,
-                'end_services'=>$request->end_date,
+                'start_services'=>$request->startDate,
+                'end_services'=>$request->endDate,
                 'military_desc'=>'terrestre',
                 'contract_url'=>'',
                 'status'=>true,
@@ -75,7 +76,7 @@ class EmployeeController extends Controller
             }
 
             foreach($works as $work){
-                $work = $employee->workHistory()->create([
+                $work = $employee->workHistorys()->create([
                     'emplo_name'=>$work['employer'],
                     'phone_number'=>$work['phone'],
                     'start_work'=>$work['start'],

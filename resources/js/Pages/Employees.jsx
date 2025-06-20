@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import TablaEmployee from "@/Components/TablaEmployee";
+import TablaEmployee from "../Components/tablaEmployee";
 import { Head } from "@inertiajs/react";
 
 export default function Employees({ auth, employees: initialEmployees }) {

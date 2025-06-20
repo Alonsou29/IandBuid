@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('duties');
             $table->text('reason_leaving');
             $table->foreign('employee_id')->references('social_id')->on('employees')->onDelete('cascade');
-            $table->boolean('isDelete')->default(false);;
+            $table->boolean('isDelete')->default(false);
             $table->timestamps();
         });
     }

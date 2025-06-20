@@ -38,12 +38,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Occupations
                                 </NavLink>
 
-{/*                                 <NavLink
+                                <NavLink
                                     href={route('workers.index')}
                                     active={route().current('workers.index')}
                                 >
                                     Workers
-                                </NavLink> */}
+                                </NavLink>
                             </div>
 
                         </div>

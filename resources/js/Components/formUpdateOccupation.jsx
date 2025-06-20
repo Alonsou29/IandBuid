@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // Importa Axios
 
 function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que recibes el ID del recurso a editar
-  const [nombre, setNombre] = useState('');
+  const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('');
@@ -14,11 +14,11 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
       const fetchRecurso = async () => {
         try {
           // Usando Axios para GET
-          const response = await axios.get(`/updateOccupation/${recursoId}`);
+          const response = await axios.get(`/udtOccupation/${recursoId}`);
           const data = response.data; // Axios automáticamente parsea el JSON a response.data
 
           // Llenar el formulario con los datos existentes
-          setNombre(data.data.nombre); // Asumiendo que la API devuelve { data: { ... } }
+          setName(data.data.name); // Asumiendo que la API devuelve { data: { ... } }
           setType(data.data.type);
           setDescription(data.data.description);
           setStatus(data.data.status);
@@ -47,7 +47,7 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
     event.preventDefault();
 
     const datosActualizados = {
-      nombre,
+      name,
       type,
       description,
       status,
@@ -99,14 +99,14 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
     <h2 className="text-2xl font-semibold mb-6 text-center text-red-700">Edit Occupation</h2>
     <form onSubmit={handleSubmit}>
 
-      <label htmlFor="nombre" className="block mb-2 font-semibold text-gray-700">
+      <label htmlFor="name" className="block mb-2 font-semibold text-gray-700">
         Name <span className="text-red-500">*</span>
       </label>
       <input
         id="nombre"
         type="text"
-        value={nombre}
-        onChange={e => setNombre(e.target.value)}
+        value={name}
+        onChange={e => setName(e.target.value)}
         required
         className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
         placeholder="Enter occupation name"

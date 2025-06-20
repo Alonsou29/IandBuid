@@ -9,10 +9,10 @@ use Inertia\Inertia;
 class OccupationController extends Controller
 {
     public function listarOccupations(){
-        $Occupation=Occupation::all();
+        $Occupation=Occupation::where('isDelete',false)->get();
 
         $mapeo = $Occupation->map(function ($item) use ($Occupation){
-            $item['status'] = $item['status'] == 1 ? 'Acitvo':'Inactivo'; 
+            $item['status'] = $item['status'] == 1 ? 'Acitvo':'Inactivo';
         });
 
         return Inertia::render("Occupations", ["occupations"=>$Occupation]);
@@ -62,7 +62,7 @@ class OccupationController extends Controller
             $Occupation->ubication = $request->ubication;
             $Occupation->status = $request->status;
             // $Occupation->isDelete = $request->isDelete;
-        
+
             $Occupation->save();
 
             return response()->json(['msg'=>'Update Success!','data'=>$Occupation],200);
@@ -72,12 +72,18 @@ class OccupationController extends Controller
         }
     }
 
+    public function occupationById(Request $request, $id){
+        $occupation = Occupation::find($id);
+
+        return response()->json(['data'=>$occupation],200);
+    }
+
     public function deleteOccupation(Request $request, $id){
         try{
             $Occupation=Occupation::find($id);
             $Occupation->isDelete = true;
             $Occupation->save();
-            
+
             return response()->json(['msg'=>'Occupation Delete Success!'],200);
 
         }catch(ValidationException $e){

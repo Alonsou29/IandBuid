@@ -26,6 +26,7 @@ class Employee extends Model
         'birthday',
         'apply_occupations',
         'avaible_travel',
+        'airport',
         'military_services',
         'start_services',
         'end_services',
@@ -48,7 +49,7 @@ class Employee extends Model
         return $this->hasMany(Reference::class,'employee_id','social_id');
     }
 
-    public function workHistory():HasMany{
+    public function workHistorys():HasMany{
         return $this->hasMany(Experience::class,'employee_id','social_id');
     }
 }
