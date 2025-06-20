@@ -61,7 +61,6 @@ class OccupationController extends Controller
             $Occupation->description = $request->description;
             $Occupation->ubication = $request->ubication;
             $Occupation->status = $request->status;
-            // $Occupation->isDelete = $request->isDelete;
 
             $Occupation->save();
 
@@ -90,4 +89,5 @@ class OccupationController extends Controller
             return response()->json([$e],400);
         }
     }
+
 }

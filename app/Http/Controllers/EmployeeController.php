@@ -68,23 +68,27 @@ class EmployeeController extends Controller
             $works = $request->workHistory;
 
             foreach($ref as $person){
-               $reference = $employee->references()->create([
-                'fullname'=>$person['name'],
-                'phone_number'=>$person['phone'],
-                'email'=>$person['email']
-                ]);
+                if(!empty($person['name'])){
+                    $reference = $employee->references()->create([
+                     'fullname'=>$person['name'],
+                     'phone_number'=>$person['phone'],
+                     'email'=>$person['email']
+                     ]);
+                }
             }
 
             foreach($works as $work){
-                $work = $employee->workHistorys()->create([
-                    'emplo_name'=>$work['employer'],
-                    'phone_number'=>$work['phone'],
-                    'start_work'=>$work['start'],
-                    'end_work'=>$work['end'],
-                    'title'=>$work['title'],
-                    'duties'=>$work['duties'],
-                    'reason_leaving'=>$work['reason'],
-                ]);
+                if(!empty($work['employer'])){
+                    $work = $employee->workHistorys()->create([
+                        'emplo_name'=>$work['employer'],
+                        'phone_number'=>$work['phone'],
+                        'start_work'=>$work['start'],
+                        'end_work'=>$work['end'],
+                        'title'=>$work['title'],
+                        'duties'=>$work['duties'],
+                        'reason_leaving'=>$work['reason'],
+                    ]);
+                }
             }
 
             return response()->json(['msg'=>$ref], 201);
