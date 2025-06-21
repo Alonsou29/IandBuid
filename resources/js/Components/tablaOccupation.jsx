@@ -86,34 +86,63 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       center: true,
     },
     {
-      name: 'Delete',
-      cell: row => (
-        <button
-          className="p-1 rounded hover:bg-red-700 transition-colors"
-          onClick={async () => {
-            // confirmación opcional aquí
+  name: 'Delete',
+  cell: row => (
+    <button
+      className="p-1 rounded hover:bg-red-700 transition-colors"
+      onClick={async () => {
+        const confirm = await Swal.fire({
+          title: 'Are you sure?',
+          text: `This will permanently delete "${row.name}"`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#6b7280',
+        });
+
+        if (confirm.isConfirmed) {
+          try {
             await axios.delete(`/deleteOccupation/${row.id}`);
-          }}
-          aria-label="Eliminar"
-        >
-          {/* Ícono de basurero */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
-          </svg>
-        </button>
-      ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-      center: true,
-    },
+            setOccupations(prev => prev.filter(o => o.id !== row.id));
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted!',
+              text: 'Occupation has been deleted.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          } catch (error) {
+            console.error('Delete failed:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to delete occupation.',
+            });
+          }
+        }
+      }}
+      aria-label="Delete"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5 text-red-600"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
+      </svg>
+    </button>
+  ),
+  ignoreRowClick: true,
+  allowOverflow: true,
+  button: true,
+  center: true,
+},
 {
   name: 'Modify',
   cell: row => (
@@ -127,16 +156,15 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
               recursoId={row.id}
               onSuccess={(updatedOccupation) => {
                 MySwal.close();
-
-                // ✅ Actualizar la ocupación modificada en el estado
                 setOccupations(prev =>
                   prev.map(o => o.id === updatedOccupation.id ? updatedOccupation : o)
                 );
-
                 Swal.fire({
                   icon: 'success',
-                  title: 'Success',
-                  text: 'Occupation updated successfully!',
+                  title: 'Updated!',
+                  text: 'Occupation updated successfully.',
+                  timer: 2000,
+                  showConfirmButton: false,
                 });
               }}
             />
@@ -149,7 +177,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
           }
         });
       }}
-      aria-label="Modificar"
+      aria-label="Modify"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -169,6 +197,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
   button: true,
   center: true,
 }
+
 
   ];
 
