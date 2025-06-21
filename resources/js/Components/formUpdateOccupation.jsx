@@ -65,7 +65,6 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
 
       // Axios automáticamente maneja la propiedad 'data' para el cuerpo de la respuesta
       console.log('Recurso actualizado exitosamente:', response.data);
-      alert('Recurso actualizado exitosamente!');
 
         // ✅ Llamar a onSuccess con la data actualizada
     if (typeof onSuccess === 'function') {

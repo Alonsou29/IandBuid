@@ -8,6 +8,7 @@ const MySwal = withReactContent(Swal);
 const steps = [
   'Job Information',
   'Resume',
+  'Personal Information (Social ID)',
   'Personal Information',
   'Military Experience',
   'References',
@@ -17,6 +18,8 @@ const steps = [
 ];
 
 export default function Formulario({ selectedJob }) {
+  const [toastMessage, setToastMessage] = useState(null);
+  const [errores, setErrores] = useState({});
   const [certFiles, setCertFiles] = useState([]);
   const [errorMsg, setErrorMsg] = useState(null);
   const [step, setStep] = useState(0);
@@ -48,13 +51,242 @@ export default function Formulario({ selectedJob }) {
     referred: '',
     referredBy: '',
     certifications: [],
+    occupation_id: selectedJob?.id || '',
   });
 
-const handleNext = (e) => {
-  e.preventDefault(); // prevenir que el formulario se envíe al hacer clic
-  setStep(prev => prev + 1);
-  console.log("handleNext called");
+const showErrorToast = (msg) => {
+  setToastMessage(msg);
+  setTimeout(() => setToastMessage(null), 2500);
 };
+
+
+const handleNext = (e) => {
+  e.preventDefault();
+
+  if (!validateCurrentStep()) {
+    return; // No avanzamos si no pasa validación
+  }
+
+  setStep(prev => prev + 1);
+};
+
+
+
+
+
+const validateCurrentStep = () => {
+  const newErrors = {};
+
+  // Paso 2 - Información Personal
+  if (step === 2) {
+    const requiredFields = [
+      'social_id'
+    ];
+
+    // Validar campos vacíos
+    requiredFields.forEach(field => {
+      if (!formData[field] || String(formData[field]).trim() === '') {
+        newErrors[field] = true;
+      }
+    });
+
+
+
+    if (Object.keys(newErrors).length > 0) {
+      showErrorToast("Please complete all required fields.");
+      setErrores(newErrors);
+      return false;
+    }
+  }
+
+
+  // Paso 2 - Información Personal
+  if (step === 3) {
+    const requiredFields = [
+      'firstName', 'lastName', 'dob',
+      'street', 'city', 'state', 'zip',
+      'email', 'phone', 'willingToTravel'
+    ];
+
+    // Validar campos vacíos
+    requiredFields.forEach(field => {
+      if (!formData[field] || String(formData[field]).trim() === '') {
+        newErrors[field] = true;
+      }
+    });
+
+    // Validación de edad
+    if (formData.dob) {
+      const dob = new Date(formData.dob);
+      const today = new Date();
+      const birthDateThisYear = new Date(formData.dob);
+      birthDateThisYear.setFullYear(today.getFullYear());
+
+      const age = today.getFullYear() - dob.getFullYear() - (today < birthDateThisYear ? 1 : 0);
+      if (age < 18 || age > 70) {
+        showErrorToast("Age must be between 18 and 70 years.");
+        newErrors.dob = true;
+      }
+    }
+
+    // Validación de email
+    if (formData.email) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(formData.email)) {
+        showErrorToast("Please enter a valid email address.");
+        newErrors.email = true;
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      showErrorToast("Please complete all required fields.");
+      setErrores(newErrors);
+      return false;
+    }
+  }
+
+  // Paso 3 - Experiencia Militar
+if (step === 4) {
+  const requiredFields = ['dfac', 'branch'];
+
+  requiredFields.forEach(field => {
+    if (!formData[field] || String(formData[field]).trim() === '') {
+      newErrors[field] = true;
+    }
+  });
+
+
+  // Validación de fechas
+  if (formData.startDate && formData.endDate) {
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    if (end < start) {
+      newErrors.endDate = true;
+      showErrorToast("End date cannot be before start date.");
+      setErrores(newErrors);
+      return false;
+    }
+  }
+
+  // Si hay errores generales
+  if (Object.keys(newErrors).length > 0) {
+    showErrorToast("Please complete all required fields.");
+    setErrores(newErrors);
+    return false;
+  }
+}
+
+if (step === 5) {
+  const referencesValid = formData.references.some(ref =>
+    ref.name.trim() !== '' &&
+    ref.phone.trim() !== '' &&
+    ref.email.trim() !== ''
+  );
+
+  if (!referencesValid) {
+    showErrorToast("Please complete at least one reference.");
+    return false;
+  }
+
+  // Validación de email en las referencias que estén llenas
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const invalidEmail = formData.references.find(ref =>
+    ref.name.trim() !== '' &&
+    ref.phone.trim() !== '' &&
+    ref.email.trim() !== '' &&
+    !emailPattern.test(ref.email.trim())
+  );
+
+  if (invalidEmail) {
+    showErrorToast("Please enter a valid email address in your reference(s).");
+    return false;
+  }
+}
+
+
+if (step === 6) {
+  const newWorkErrors = [];
+
+  const workValid = formData.workHistory.some((job, i) => {
+    const errors = {};
+    const isComplete =
+      job.employer.trim() !== '' &&
+      job.phone.trim() !== '' &&
+      job.start.trim() !== '' &&
+      job.end.trim() !== '' &&
+      job.title.trim() !== '' &&
+      job.duties.trim() !== '' &&
+      job.reason.trim() !== '';
+
+    // Validación de fechas individuales
+    if (job.start && job.end) {
+      const start = new Date(job.start);
+      const end = new Date(job.end);
+      if (end < start) {
+        errors.end = true;
+        showErrorToast(`Work history ${i + 1}: End date cannot be before start date.`);
+      }
+    }
+
+    newWorkErrors[i] = errors;
+    return isComplete;
+  });
+
+  // Si ninguna fila está completa
+  if (!workValid) {
+    showErrorToast("Please complete at least one work history entry.");
+    return false;
+  }
+
+  // Si hay errores de fecha en algún registro
+  const hasDateError = newWorkErrors.some(e => Object.keys(e).length > 0);
+  if (hasDateError) {
+    setErrores(prev => ({ ...prev, workHistory: newWorkErrors }));
+    return false;
+  }
+
+  // Limpiar errores si todo está bien
+  setErrores(prev => ({ ...prev, workHistory: [] }));
+}
+
+if (step === 7) {
+  const newAdditionalErrors = {};
+
+  // Validar si se seleccionó una opción
+  if (!formData.referred || formData.referred === '') {
+    newAdditionalErrors.referred = true;
+  }
+
+  // Si la opción fue "yes", debe indicar quién refirió
+  if (formData.referred === 'yes' && (!formData.referredBy || formData.referredBy.trim() === '')) {
+    newAdditionalErrors.referredBy = true;
+  }
+
+  // Validar que todos los archivos sean PDF (opcional, ya está limitado con accept="application/pdf")
+  const invalidFiles = formData.certifications.filter(file => file.type !== 'application/pdf');
+  if (invalidFiles.length > 0) {
+    showErrorToast("Only PDF files are allowed for certifications.");
+    return false;
+  }
+
+  if (Object.keys(newAdditionalErrors).length > 0) {
+    setErrores(prev => ({ ...prev, additionalInfo: newAdditionalErrors }));
+    showErrorToast("Please complete the required fields in this section.");
+    return false;
+  }
+
+  // Limpiar errores si todo está bien
+  setErrores(prev => ({ ...prev, additionalInfo: {} }));
+}
+
+  // Si todo está bien
+  setErrores({});
+  return true;
+};
+
+
+
+
 
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
@@ -133,38 +365,46 @@ const handleRemoveCertFile = (index) => {
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const dob = new Date(formData.dob);
-    const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear() - (today < new Date(dob.setFullYear(today.getFullYear())) ? 1 : 0);
+  const isEmptyObject = (obj) => {
+  return Object.values(obj).every(value => String(value).trim() === '');
+};
 
-    if (age < 18 || age > 70) {
-      MySwal.fire('Invalid Age', 'Age must be between 18 and 70 years.', 'error');
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (/\d/.test(formData.firstName) || /\d/.test(formData.lastName)) {
-      MySwal.fire('Invalid Name', 'First and Last Name should not contain numbers.', 'error');
-      return;
-    }
-
-    if (/\d/.test(formData.city) || /\d/.test(formData.state)) {
-      MySwal.fire('Invalid Address', 'City and State should not contain numbers.', 'error');
-      return;
-    }
-
-    if (/[a-zA-Z]/.test(formData.phone)) {
-      MySwal.fire('Invalid Phone', 'Phone number should not contain letters.', 'error');
-      return;
-    }
-
-    formData.dfac = formData.dfac === 'Yes' ? 1:0;
-    formData.willingToTravel = formData.willingToTravel === 'yes' ? 1:0;
-    const response = await axios.post('/createEmployee', formData);
-    console.log('Cliente registrado:', formData);
-    MySwal.fire('Success', 'Form submitted successfully!', 'success');
+  // Normalizar valores booleanos
+  const cleanData = {
+    ...formData,
+    dfac: formData.dfac === 'Yes' ? 1 : 0,
+    willingToTravel: formData.willingToTravel === 'yes' ? 1 : 0,
   };
+
+  // Limpiar referencias si están vacías
+  const validRefs = cleanData.references.filter(ref => !isEmptyObject(ref));
+  if (validRefs.length > 0) {
+    cleanData.references = validRefs;
+  } else {
+    delete cleanData.references;
+  }
+
+  // Limpiar historial laboral si está vacío
+  const validHistory = cleanData.workHistory.filter(job => !isEmptyObject(job));
+  if (validHistory.length > 0) {
+    cleanData.workHistory = validHistory;
+  } else {
+    delete cleanData.workHistory;
+  }
+
+  try {
+    const response = await axios.post('/createEmployee', cleanData);
+    console.log('Cliente registrado:', cleanData);
+    MySwal.fire('Success', 'Form submitted successfully!', 'success');
+  } catch (error) {
+    console.error('Error al enviar el formulario:', error);
+    MySwal.fire('Error', 'There was a problem submitting the form.', 'error');
+  }
+};
+
 
   return (
   <>
@@ -175,7 +415,11 @@ const handleRemoveCertFile = (index) => {
       </h2>
     </div>
 
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6">
+    <form
+  onSubmit={handleSubmit}
+  className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6 h-[430px] overflow-auto"
+>
+
       {/* Paso 1 - job */}
       {step === 0 && (
         <div className="space-y-6">
@@ -201,6 +445,11 @@ const handleRemoveCertFile = (index) => {
         </div>
       )}
 
+{toastMessage && (
+  <div className="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade-in">
+    {toastMessage}
+  </div>
+)}
 
 
       {/* Paso 2 - Resume */}
@@ -226,27 +475,38 @@ const handleRemoveCertFile = (index) => {
           </div>
         )}
 
+{/* Paso 3 - Personal Information */}
+      {step === 2 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div>
+              <label className="text-left block text-sm font-medium text-gray-700">Social ID</label>
+              <input onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" name="social_id" placeholder="Social ID" value={formData.social_id} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.social_id ? 'border-red-500' : ''}`} />
+            </div>
+            
 
+                  
+          </div>
+        </>
+      )}
 
       {/* Paso 3 - Personal Information */}
-      {step === 2 && (
+      {step === 3 && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-left block text-sm font-medium text-gray-700">First Name</label>
-              <input name="firstName" pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} placeholder="First Name" value={formData.firstName} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              <input name="firstName" pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} placeholder="First Name" value={formData.firstName} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.firstName ? 'border-red-500' : ''}`} />
             </div>
             <div>
               <label className="text-left block text-sm font-medium text-gray-700">Last Name</label>
-              <input name="lastName" pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} placeholder="Last Name" value={formData.lastName} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                 <input name="lastName" pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} placeholder="Last Name" value={formData.lastName} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.lastName ? 'border-red-500' : ''}`} />
             </div>
-            <div>
-              <label className="text-left block text-sm font-medium text-gray-700">Social ID</label>
-              <input onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" name="social_id" placeholder="Social ID" value={formData.social_id} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
+
             <div>
               <label className="text-left block text-sm font-medium text-gray-700">Date of Birth</label>
-              <input name="dob" type="date" value={formData.dob} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              <input name="dob" type="date" value={formData.dob} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.dob ? 'border-red-500' : ''}`} />
             </div>
 
             <div className="col-span-1 md:col-span-2">
@@ -255,61 +515,61 @@ const handleRemoveCertFile = (index) => {
 
             <div>
               <label className="text-left block text-sm font-medium text-gray-700">Street</label>
-              <input name="street" placeholder="Street" value={formData.street} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              <input name="street" placeholder="Street" value={formData.street} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.street ? 'border-red-500' : ''}`} />
             </div>
             <div>
               <label className="text-left block text-sm font-medium text-gray-700">City</label>
-              <input pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} name="city" placeholder="City" value={formData.city} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label className="text-left block text-sm font-medium text-gray-700">State</label>
-              <input pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} name="state" placeholder="State" value={formData.state} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label className="text-left block text-sm font-medium text-gray-700">ZIP</label>
-              <input name="zip" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" placeholder="ZIP" value={formData.zip} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
+                  <input pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} name="city" placeholder="City" value={formData.city} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.city ? 'border-red-500' : ''}`} />
+                </div>
+                  <div>
+                    <label className="text-left block text-sm font-medium text-gray-700">State</label>
+                    <input pattern="[A-Za-zÀ-ÿ\s]+" onInput={(e) => e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '')} name="state" placeholder="State" value={formData.state} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.state ? 'border-red-500' : ''}`} />
+                  </div>
+                  <div>
+                    <label className="text-left block text-sm font-medium text-gray-700">ZIP</label>
+                      <input name="zip" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" placeholder="ZIP" value={formData.zip} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.zip ? 'border-red-500' : ''}`} />
+                  </div>
 
-            <div className="col-span-1 md:col-span-2">
-              <h3 className="text-xl font-bold mt-6 mb-2 text-red-600">Contact Information</h3>
-            </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <h3 className="text-xl font-bold mt-6 mb-2 text-red-600">Contact Information</h3>
+                  </div>
 
-            <div>
-              <label className="text-left block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label className="text-left block text-sm font-medium text-gray-700">Phone</label>
-              <input name="phone" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" placeholder="Phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
+                  <div>
+                    <label className="text-left block text-sm font-medium text-gray-700">Email</label>
+                  <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.email ? 'border-red-500' : ''}`} />
+                  </div>
+                  <div>
+                    <label className="text-left block text-sm font-medium text-gray-700">Phone</label>
+                      <input name="phone" onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')} inputMode="numeric" placeholder="Phone" value={formData.phone} onChange={handleChange} className={`w-full border rounded px-3 py-2 ${errores.phone ? 'border-red-500' : ''}`} />
+                  </div>
 
-            <div className="col-span-1 md:col-span-2">
-              <h3 className="text-xl font-bold mt-6 mb-2 text-red-600">Travel Availability</h3>
-              <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Are you willing to travel?</label>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="willingToTravel"
-                    value="yes"
-                    checked={formData.willingToTravel === 'yes'}
-                    onChange={handleChange}
-                    className="accent-red-600"
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="willingToTravel"
-                    value="no"
-                    checked={formData.willingToTravel === 'no'}
-                    onChange={handleChange}
-                    className="accent-red-600"
-                  />
-                  No
-                </label>
-              </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <h3 className="text-xl font-bold mt-6 mb-2 text-red-600">Travel Availability</h3>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Are you willing to travel?</label>
+                    <div className={`flex flex-col sm:flex-row items-center gap-4 ${errores.willingToTravel ? 'border border-red-500 p-2 rounded' : ''}`}>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="willingToTravel"
+                value="yes"
+                checked={formData.willingToTravel === 'yes'}
+                onChange={handleChange}
+                className="accent-red-600"
+              />
+              Yes
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="willingToTravel"
+                value="no"
+                checked={formData.willingToTravel === 'no'}
+                onChange={handleChange}
+                className="accent-red-600"
+              />
+              No
+            </label>
+          </div>
             </div>
           </div>
         </>
@@ -318,10 +578,10 @@ const handleRemoveCertFile = (index) => {
 
 
       {/* Paso 4 - Military Experience */}
-      {step === 3 && (
+      {step === 4 && (
         <>
           <label className="block text-left font-semibold mb-1">1. Did you have military experience?</label>
-          <div className="flex flex-wrap items-center gap-6 mb-4">
+<div className={`flex flex-wrap items-center gap-6 mb-4 ${errores.dfac ? 'border border-red-500 p-2 rounded' : ''}`}>
             {['Yes', 'No'].map((option) => (
               <label key={option} className="flex items-center gap-2">
                 <input
@@ -338,7 +598,7 @@ const handleRemoveCertFile = (index) => {
           </div>
 
           <label className="block text-left font-semibold mb-1">2. Branch of the U.S. Armed Forces</label>
-          <div className="flex flex-wrap items-center gap-6 mb-4">
+<div className={`flex flex-wrap items-center gap-6 mb-4 ${errores.branch ? 'border border-red-500 p-2 rounded' : ''}`}>
             {['Air Force', 'Army', 'Navy', 'U.S. Coast Guard', 'None'].map((option) => (
               <label key={option} className="flex items-center gap-2">
                 <input
@@ -362,7 +622,7 @@ const handleRemoveCertFile = (index) => {
             placeholder="(code)"
             value={formData.airport}
             onChange={handleChange}
-            className="border rounded px-3 py-2 w-full mb-4"
+            className={`border rounded px-3 py-2 w-full mb-4 ${errores.airport ? 'border-red-500' : ''}`}
           />
 
           <label className="block text-left font-semibold mb-1">4. Date Available</label>
@@ -374,7 +634,7 @@ const handleRemoveCertFile = (index) => {
                 type="date"
                 value={formData.startDate}
                 onChange={handleChange}
-                className="border rounded px-3 py-2 w-full"
+                className={`border rounded px-3 py-2 w-full ${errores.startDate ? 'border-red-500' : ''}`}
               />
             </div>
             <div>
@@ -384,7 +644,7 @@ const handleRemoveCertFile = (index) => {
                 type="date"
                 value={formData.endDate}
                 onChange={handleChange}
-                className="border rounded px-3 py-2 w-full"
+                className={`border rounded px-3 py-2 w-full ${errores.endDate ? 'border-red-500' : ''}`}
               />
             </div>
           </div>
@@ -392,7 +652,7 @@ const handleRemoveCertFile = (index) => {
       )}
 
       {/* Paso 5 - References */}
-      {step === 4 && (
+      {step === 5 && (
         <>
           {formData.references.map((ref, i) => (
             <div key={i} className="border border-gray-300 rounded-md p-4 mb-6">
@@ -435,7 +695,7 @@ const handleRemoveCertFile = (index) => {
 
 
       {/* Paso 6 - Work History */}
-      {step === 5 && (
+      {step === 6 && (
         <>
           {formData.workHistory.map((job, i) => (
             <div key={i} className="border border-gray-300 rounded-md p-4 mb-6">
@@ -513,14 +773,14 @@ const handleRemoveCertFile = (index) => {
       )}
 
       {/* Paso 7 - Additional Info */}
-      {step === 6 && (
+      {step === 7 && (
         <>
           <label className="block font-semibold mb-1">Were you referred to FPS by someone?</label>
           <select
             name="referred"
             value={formData.referred}
             onChange={handleChange}
-            className="border rounded px-3 py-2 w-full mb-3"
+ className={`border rounded px-3 py-2 w-full mb-3 ${errores.additionalInfo?.referred ? 'border-red-500' : ''}`}
           >
             <option value="">-- Select --</option>
             <option value="yes">Yes</option>
@@ -531,7 +791,7 @@ const handleRemoveCertFile = (index) => {
             placeholder="If yes, who?"
             value={formData.referredBy}
             onChange={handleChange}
-            className="border rounded px-3 py-2 w-full mb-3"
+            className={`border rounded px-3 py-2 w-full mb-3 ${errores.additionalInfo?.referredBy ? 'border-red-500' : ''}`}
           />
 
 <label className="block font-semibold mb-1">
@@ -569,7 +829,7 @@ const handleRemoveCertFile = (index) => {
       )}
 
         {/* Paso 8 - Confirmación */}
-      {step === 7 && (
+      {step === 8 && (
         <div className="space-y-6 text-gray-800">
           <section>
             <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Job</h3>
@@ -579,6 +839,7 @@ const handleRemoveCertFile = (index) => {
                   <p><strong>Type:</strong> {job.type}</p>
                   <p><strong>Location:</strong> {job.ubication}</p>
                   <p><strong>Description:</strong> {job.description}</p>
+                  <p><strong>ID:</strong> {job.id}</p>
                 </>
               ) : (
                 <p>{job || 'No seleccionado'}</p>
@@ -611,7 +872,7 @@ const handleRemoveCertFile = (index) => {
 
           <section>
             <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Military Experience</h3>
-            <p className='text-left'><strong>DFAC Experience:</strong> {formData.dfac || '-'}</p>
+            <p className='text-left'><strong>Military Experience:</strong> {formData.dfac || '-'}</p>
             <p className='text-left'><strong>Branch:</strong> {formData.branch || '-'}</p>
             <p className='text-left'><strong>Departing Airport:</strong> {formData.airport || '-'}</p>
             <p className='text-left'><strong>Date Available:</strong> {formData.dateAvailable || '-'}</p>
@@ -665,6 +926,7 @@ const handleRemoveCertFile = (index) => {
       )}
 
 
+    </form>
       <div className="flex justify-between pt-6">
         {step > 0 && (
           <button type="button" onClick={handleBack} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
@@ -681,7 +943,6 @@ const handleRemoveCertFile = (index) => {
           </button>
         )}
       </div>
-    </form>
       </>
   );
 }
