@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import axios from 'axios';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 const MySwal = withReactContent(Swal);
 
@@ -60,11 +61,44 @@ const showErrorToast = (msg) => {
 };
 
 
-const handleNext = (e) => {
+const handleNext = async (e)  => {
   e.preventDefault();
 
   if (!validateCurrentStep()) {
     return; // No avanzamos si no pasa validación
+  }
+
+  //buscar una mejor forma de realizar esta validacion para ver si exite el employee
+  if(formData.social_id != ''){
+    const reqeust = await axios.get(`/EmployeeWithSocialId/${formData.social_id}`).then(response=>{
+      if(response.status == 202){
+        // console.log(response.data);
+
+        console.log(response.data)
+
+        let employee = response.data.employee;
+        let address = response.data.address;
+
+        formData.social_id = employee['social_id'];
+        formData.firstName = employee['name'];
+        formData.lastName = employee['lastname'];
+        formData.dob = employee['birthday'];
+        formData.email = employee['email'];
+        formData.phone = employee['phone_number'];
+        formData.airport = employee['airport'];
+        formData.willingToTravel = employee['avaible_travel'] == 1 ? 'Yes':'No';
+
+        console.log(address);
+        const mapa = address.map(function(item, index, arr){
+          formData.state = item['state'];
+          formData.city = item['city'];
+          formData.street = item['street'];
+          formData.zip = item['zip'];
+
+        });
+        setStep(prev => prev + 5);
+      }
+    });
   }
 
   setStep(prev => prev + 1);
@@ -377,6 +411,7 @@ const handleSubmit = async (e) => {
     ...formData,
     dfac: formData.dfac === 'Yes' ? 1 : 0,
     willingToTravel: formData.willingToTravel === 'yes' ? 1 : 0,
+    referred: formData.referred === 'Yes' ? 1 : 0
   };
 
   // Limpiar referencias si están vacías
@@ -839,7 +874,6 @@ const handleSubmit = async (e) => {
                   <p><strong>Type:</strong> {job.type}</p>
                   <p><strong>Location:</strong> {job.ubication}</p>
                   <p><strong>Description:</strong> {job.description}</p>
-                  <p><strong>ID:</strong> {job.id}</p>
                 </>
               ) : (
                 <p>{job || 'No seleccionado'}</p>
@@ -868,6 +902,7 @@ const handleSubmit = async (e) => {
             <p className='text-left'><strong>ZIP:</strong> {formData.zip || '-'}</p>
             <p className='text-left'><strong>Email:</strong> {formData.email || '-'}</p>
             <p className='text-left'><strong>Phone:</strong> {formData.phone || '-'}</p>
+            <p className='text-left'><strong>willingToTravel:</strong> {formData.willingToTravel || '-'}</p>
           </section>
 
           <section>
@@ -938,7 +973,7 @@ const handleSubmit = async (e) => {
             Next
           </button>
         ) : (
-          <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+          <button type="submit" onClick={handleSubmit} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
             Submit
           </button>
         )}

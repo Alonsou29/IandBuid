@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 
 class EmployeeController extends Controller
@@ -16,7 +17,15 @@ class EmployeeController extends Controller
 
     public function listaEmployees(){
         try{
-            $Employee = Employee::select('name', 'social_id', 'avaible_travel')->get();
+            $Employee = Employee::join('addresses', 'employees.social_id', "=", "addresses.employee_id")
+            ->select('name', 'social_id', 'avaible_travel as available_for_travel', 'state')
+            ->get();
+
+            foreach($Employee as $item){
+                $emplo = Employee::find($item['social_id']);
+                $item['jobs_applied'] = $emplo->occupations()->count();
+            }
+
             return Inertia::render("Employees", ["employees"=>$Employee]);
         }catch(ValidationException $e){
             return response()->json([$e],400);
@@ -26,7 +35,14 @@ class EmployeeController extends Controller
     public function employeeBySocialId(Request $request,$socialId){
         $Employee = Employee::find($socialId);
 
-        return response()->json(['employee'=>$Employee],200);
+        if($Employee){
+            $address = $Employee->addresses()->get();
+            $reference = $Employee->references()->get();
+            $workHistory = $Employee->workHistorys()->get();
+            return response()->json(['employee'=>$Employee,'address'=>$address,'reference'=>$reference,'workHistory'=>$workHistory ],202);
+        }else{
+            return response()->json(['employee'=>'no exist employee'],200);
+        }
     }
 
     public function createEmployee(Request $request){
@@ -39,13 +55,17 @@ class EmployeeController extends Controller
                 'email'=>['required','unique:'.Employee::class]
             ]);
 
+            $fechaActual = now();
+            $fechaNacimiento =Carbon::parse($request->dob);
+            $age = (int) $fechaNacimiento->diffInYears($fechaActual);
+
             $employee = Employee::create([
                 'social_id'=>$request->social_id,
                 'name'=>$request->firstName,
                 'lastname'=>$request->lastName,
                 'phone_number'=>$request->phone,
                 'email' => $request->email,
-                'age'=> 20,
+                'age'=> $age,
                 'birthday'=>$request->dob,
                 'apply_occupations'=>false,
                 'avaible_travel'=>$request->willingToTravel,
@@ -53,8 +73,9 @@ class EmployeeController extends Controller
                 'military_services'=>$request->dfac,
                 'start_services'=>$request->startDate,
                 'end_services'=>$request->endDate,
+                'isRefered'=>$request->referred,
                 'military_desc'=>'terrestre',
-                'contract_url'=>'',
+                'isContract'=>false,
                 'status'=>true,
             ]);
             $address = $employee->addresses()->create([
@@ -89,6 +110,10 @@ class EmployeeController extends Controller
                         'reason_leaving'=>$work['reason'],
                     ]);
                 }
+            }
+
+            if(!empty($request->occupation_id)){
+                $employee->occupations()->attach($request->occupation_id);
             }
 
             return response()->json(['msg'=>$ref], 201);

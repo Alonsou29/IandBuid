@@ -72,7 +72,7 @@ export default function Jobs({ occupations }) {
                 </p>
                 <p className="text-sm text-gray-700 mb-3">
                   <strong>Status:</strong>{" "}
-                  {job.status === 1 ? (
+                  {job.status === 'Activo' ? (
                     <span className="inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">
                       Disponible
                     </span>

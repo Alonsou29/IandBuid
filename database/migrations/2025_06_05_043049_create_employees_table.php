@@ -21,12 +21,14 @@ return new class extends Migration
             $table->date('birthday');
             $table->boolean('apply_occupations')->nullable();
             $table->boolean('avaible_travel');
-            $table->boolean('military_services');
+            $table->boolean('military_services')->default(false);
+            $table->string('dfac')->default('No base expirence');
             $table->string('airport');
             $table->date('start_services')->nullable();
             $table->date('end_services')->nullable();
             $table->string('military_desc')->nullable();
-            $table->string('contract_url');
+            $table->boolean('isContract')->default(false);
+            $table->boolean('isRefered')->default(false);
             $table->boolean('status');
             $table->boolean('isDelete')->default(false);
             $table->timestamps();

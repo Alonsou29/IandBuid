@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
 Route::put('/modifyEmployee/{id}',[EmployeeController::class, 'updateEmployee']);
-Route::get('/listarEmployeeSocialId/{id}',[EmployeeController::class, 'employeeBySocialId']);
+Route::get('/EmployeeWithSocialId/{id}',[EmployeeController::class, 'employeeBySocialId']);
 Route::get('/listarEmployee',[EmployeeController::class, 'listaEmployees'])->name('workers.index');
 Route::put('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
 //occupations
