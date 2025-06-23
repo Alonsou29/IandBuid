@@ -80,6 +80,12 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       center: true,
     },
     {
+      name: 'Applications',
+      selector: row => row.applications,
+      sortable: true,
+      center: true,
+    },
+    {
       name: 'Status',
       selector: row => row.status === 1 ? 'Active' : 'Inactive',
       sortable: true,

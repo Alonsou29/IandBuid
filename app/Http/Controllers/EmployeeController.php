@@ -90,32 +90,37 @@ class EmployeeController extends Controller
                 'zip'=>$request->zip
             ]);
 
-            $ref = $request->references;
-            $works = $request->workHistory;
-
-            foreach($ref as $person){
-                if(!empty($person['name'])){
-                    $reference = $employee->references()->create([
-                     'fullname'=>$person['name'],
-                     'phone_number'=>$person['phone'],
-                     'email'=>$person['email']
-                     ]);
-                }
-            }
-
-            foreach($works as $work){
-                if(!empty($work['employer'])){
-                    $work = $employee->workHistorys()->create([
-                        'emplo_name'=>$work['employer'],
-                        'phone_number'=>$work['phone'],
-                        'start_work'=>$work['start'],
-                        'end_work'=>$work['end'],
-                        'title'=>$work['title'],
-                        'duties'=>$work['duties'],
-                        'reason_leaving'=>$work['reason'],
+             // Decodificar referencias JSON
+        $ref = json_decode($request->references, true);
+        if (is_array($ref)) {
+            foreach ($ref as $person) {
+                if (!empty($person['name'])) {
+                    $employee->references()->create([
+                        'fullname' => $person['name'],
+                        'phone_number' => $person['phone'],
+                        'email' => $person['email'],
                     ]);
                 }
             }
+        }
+
+        // Decodificar historial laboral JSON
+        $works = json_decode($request->workHistory, true);
+        if (is_array($works)) {
+            foreach ($works as $work) {
+                if (!empty($work['employer'])) {
+                    $employee->workHistorys()->create([
+                        'emplo_name' => $work['employer'],
+                        'phone_number' => $work['phone'],
+                        'start_work' => $work['start'],
+                        'end_work' => $work['end'],
+                        'title' => $work['title'],
+                        'duties' => $work['duties'],
+                        'reason_leaving' => $work['reason'],
+                    ]);
+                }
+            }
+        }
 
             if(!empty($request->occupation_id)){
                 $employee->occupations()->attach($request->occupation_id);
@@ -129,6 +134,19 @@ class EmployeeController extends Controller
                     'url'=>$storageLink,
                 ]);
             }
+
+                        // Guardar certificaciones si vienen archivos
+            if ($request->hasFile('certifications')) {
+                foreach ($request->file('certifications') as $certFile) {
+                    $path = $certFile->store('certifications', 'public');
+
+                    $employee->documents()->create([
+                        'type' => 'certification',
+                        'url' => $path,
+                    ]);
+                }
+            }
+
 
             return response()->json(['msg'=>$employee], 201);
         }catch(ValidationException $e){

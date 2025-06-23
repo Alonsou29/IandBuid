@@ -103,7 +103,7 @@ export default function Jobs({ occupations }) {
                     background: '#f0f0f0', // Fondo gris del modal
                     backdrop: 'rgba(0, 0, 0, 0.4)', // Fondo oscuro detrás
                     customClass: {
-                      popup: 'overflow-auto max-h-[90vh] p-4 fixed-height-modal' ,
+                      popup: 'overflow-auto max-h-[100vh] p-4 fixed-height-modal' ,
                     },
                   })
                 }
