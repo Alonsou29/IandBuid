@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('military_desc')->nullable();
             $table->boolean('isContract')->default(false);
             $table->boolean('isRefered')->default(false);
-            $table->boolean('status');
+            $table->string('status');
             $table->boolean('isDelete')->default(false);
             $table->timestamps();
         });

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Occupation;
 use App\Models\Address;
 use App\Models\Reference;
+use App\Models\Document;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -51,5 +52,9 @@ class Employee extends Model
 
     public function workHistorys():HasMany{
         return $this->hasMany(Experience::class,'employee_id','social_id');
+    }
+
+    public function documents():HasMany{
+        return $this->hasMany(Document::class,'employee_id','social_id');
     }
 }

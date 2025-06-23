@@ -19,16 +19,36 @@ class OccupationController extends Controller
     }
 
     public function vistaOccupations(){
-        $Occupations = Occupation::all();
+        $Occupations = Occupation::where('isDelete',false)->get();
 
         $mapped = $Occupations->map(function ($item) {
             $item->status = $item->status == 1 ? 'Activo' : 'Inactivo';
             return $item;
         });
-
+        
         return Inertia::render("Occupations_Vista", ["occupations" => $mapped]);
     }
 
+
+    public function postulationByNames(Request $request, $name){
+        try{
+            $occupation = Occupation::where('name', $name)->get();
+            return response()->json(['occupations'=>$occupation],200);
+        }catch(ValidationException $e){
+            return response()->json(['msg'=>$e]);
+        }
+    }
+
+    public function postulation(Request $request, $id){
+        try{
+            $occupation = Occupation::find($id);
+            $rq = $occupation->employees()->get();
+    
+            return response()->json(['Employees'=>$rq],200);
+        }catch(ValidationException $e){
+            return response()->json(['msg'=>$e],400);
+        }
+    }
 
     public function create(Request $request){
         try{
@@ -48,14 +68,11 @@ class OccupationController extends Controller
     }
 
     public function updateOccupation(Request $request, $id){
-
         try{
             $Occupation = Occupation::find($id);
-
             if(!$Occupation){
                 return response()->json(["msg"=>"id not found"],421);
             }
-
             $Occupation->name = $request->name;
             $Occupation->type = $request->type;
             $Occupation->description = $request->description;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Address;
+use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -33,15 +34,19 @@ class EmployeeController extends Controller
     }
 
     public function employeeBySocialId(Request $request,$socialId){
-        $Employee = Employee::find($socialId);
-
-        if($Employee){
-            $address = $Employee->addresses()->get();
-            $reference = $Employee->references()->get();
-            $workHistory = $Employee->workHistorys()->get();
-            return response()->json(['employee'=>$Employee,'address'=>$address,'reference'=>$reference,'workHistory'=>$workHistory ],202);
-        }else{
-            return response()->json(['employee'=>'no exist employee'],200);
+        try{
+            $Employee = Employee::find($socialId);
+    
+            if($Employee){
+                $address = $Employee->addresses()->get();
+                $reference = $Employee->references()->get();
+                $workHistory = $Employee->workHistorys()->get();
+                return response()->json(['employee'=>$Employee,'address'=>$address,'reference'=>$reference,'workHistory'=>$workHistory ],202);
+            }else{
+                return response()->json(['employee'=>'no exist employee'],200);
+            }
+        }catch(ValidationException $e){
+            return response()->json(['msg'=>$e]);
         }
     }
 
@@ -76,7 +81,7 @@ class EmployeeController extends Controller
                 'isRefered'=>$request->referred,
                 'military_desc'=>'terrestre',
                 'isContract'=>false,
-                'status'=>true,
+                'status'=>'',
             ]);
             $address = $employee->addresses()->create([
                 'state'=>$request->state,
@@ -116,7 +121,16 @@ class EmployeeController extends Controller
                 $employee->occupations()->attach($request->occupation_id);
             }
 
-            return response()->json(['msg'=>$ref], 201);
+            if($request->hasFile('resume')){
+                $storageLink = $request->file('resume')->store('resumes', 'public');
+
+                $employee->documents()->create([
+                    'type'=>"por definir",
+                    'url'=>$storageLink,
+                ]);
+            }
+
+            return response()->json(['msg'=>$employee], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
@@ -124,16 +138,25 @@ class EmployeeController extends Controller
     }
 
     public function updateEmployee(Request $request, $socialId){
-        $employee = Employee::find($socialId);
+        try{
+            $employee = Employee::find($socialId);
+            
 
 
-        return response()->json(["msg"=>$employee],201);
+            return response()->json(["msg"=>$employee],201);
+        }catch(ValidationException $e){
+            return response()->json(["msg"=>$e]);
+        }
     }
 
     public function deleteEmployee(Request $request, $socialId){
-        $Employee = Employee::find($socialId);
-        $Employee->isDelete = true;
-        $Employee->save();
-        return response()->json(['msg'=>'Delete Success!!', 'payload'=>$Employee],200);
+        try{
+            $Employee = Employee::find($socialId);
+            $Employee->isDelete = true;
+            $Employee->save();
+            return response()->json(['msg'=>'Delete Success!!', 'payload'=>$Employee],200);
+        }catch(ValidationException $e){
+            return response()->json(['msg'=>$e]);
+        }
     }
 }
