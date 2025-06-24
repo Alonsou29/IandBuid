@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
+Route::get('/downloadFile/{folder}/{name}', [EmployeeController::class, 'downloadFile']);
 Route::get('/postu/{id}',[OccupationController::class, 'postulation']);
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
 Route::put('/modifyEmployee/{id}',[EmployeeController::class, 'updateEmployee']);

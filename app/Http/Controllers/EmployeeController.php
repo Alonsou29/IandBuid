@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 
 class EmployeeController extends Controller
 {
+
+    private $disk = 'public';
 
     public function listaEmployees(){
         try{
@@ -36,7 +39,7 @@ class EmployeeController extends Controller
     public function employeeBySocialId(Request $request,$socialId){
         try{
             $Employee = Employee::find($socialId);
-    
+
             if($Employee){
                 $address = $Employee->addresses()->get();
                 $reference = $Employee->references()->get();
@@ -81,7 +84,7 @@ class EmployeeController extends Controller
                 'isRefered'=>$request->referred,
                 'military_desc'=>'terrestre',
                 'isContract'=>false,
-                'status'=>'',
+                'status'=>$request->immigrationStatus,
             ]);
             $address = $employee->addresses()->create([
                 'state'=>$request->state,
@@ -127,10 +130,10 @@ class EmployeeController extends Controller
             }
 
             if($request->hasFile('resume')){
-                $storageLink = $request->file('resume')->store('resumes', 'public');
-
+                $file = $request->file('resume');
+                $storageLink = $file->storeAs('resumes', $request->social_id.'_cv'.'.'.$file->extension(),$this->disk);
                 $employee->documents()->create([
-                    'type'=>"por definir",
+                    'type'=>"resume",
                     'url'=>$storageLink,
                 ]);
             }
@@ -138,7 +141,8 @@ class EmployeeController extends Controller
                         // Guardar certificaciones si vienen archivos
             if ($request->hasFile('certifications')) {
                 foreach ($request->file('certifications') as $certFile) {
-                    $path = $certFile->store('certifications', 'public');
+                    $numberCtf = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                    $path = $certFile->storeAs('certifications',$request->social_id."_ctf_".$numberCtf.".".$certFile->extensions(),$this->disk);
 
                     $employee->documents()->create([
                         'type' => 'certification',
@@ -148,7 +152,7 @@ class EmployeeController extends Controller
             }
 
 
-            return response()->json(['msg'=>$employee], 201);
+            return response()->json(['msg'=>$employee, 'certification'=>$request->hasFile('certifications')], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
@@ -158,13 +162,17 @@ class EmployeeController extends Controller
     public function updateEmployee(Request $request, $socialId){
         try{
             $employee = Employee::find($socialId);
-            
-
-
             return response()->json(["msg"=>$employee],201);
         }catch(ValidationException $e){
             return response()->json(["msg"=>$e]);
         }
+    }
+
+    public function downloadFile(Request $request,$folder,$name){
+        if(Storage::disk($this->disk)->exists($folder."/".$name)){
+            return Storage::disk($this->disk)->download($folder."/".$name);
+        }
+        return response()->json(['msg'=>'file_no_exist']);
     }
 
     public function deleteEmployee(Request $request, $socialId){

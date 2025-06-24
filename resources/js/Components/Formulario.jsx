@@ -83,7 +83,7 @@ const showErrorToast = (msg) => {
     }
 
   //buscar una mejor forma de realizar esta validacion para ver si exite el employee
-  if(formData.social_id != ''){
+  if(formData.social_id != '' &&  step === 1){
     const reqeust = await axios.get(`/EmployeeWithSocialId/${formData.social_id}`).then(response=>{
       if(response.status == 202){
         // console.log(response.data);
@@ -110,7 +110,7 @@ const showErrorToast = (msg) => {
           formData.zip = item['zip'];
 
         });
-        setStep(prev => prev + 5);
+        setStep(prev => prev + 6);
       }
     });
   }
@@ -586,6 +586,10 @@ if (formData.resume) {
   formPayload.append('resume', formData.resume); // clave debe coincidir con el backend
 }
 
+if (formData.certifications){
+    formPayload.append('certifications', formData.certifications)
+}
+
 
 
   // Ahora sí, luego de armar formPayload, puedes ver su contenido
@@ -602,6 +606,7 @@ if (formData.resume) {
   } catch (error) {
   if (error.response) {
     console.error('Error response data:', error.response.data);
+    console.log('Error response data:', error.response.data);
     if (error.response.data.validator) {
       const validatorErrors = error.response.data.validator.errors || error.response.data;
       console.log('Errores de validación:', validatorErrors);
@@ -698,7 +703,7 @@ if (formData.resume) {
 </>
 
       )}
-      
+
       {/* Paso 2 - Resume */}
       {step === 2 && (
 <div className="flex flex-col items-center justify-center min-h-[290px]">
