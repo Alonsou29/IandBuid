@@ -2,113 +2,117 @@ import React, { useState, useMemo } from "react";
 import DataTable from "react-data-table-component";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import axios from "axios";
+import EmployeeDetailTable from "./EmployeeDetailTable";
 
 const MySwal = withReactContent(Swal);
 
-export default function TablaEmployee({ employees, setEmployees }) {
-  const [filterText, setFilterText] = useState('');
-  const [selectedRow, setSelectedRow] = useState(null);
+export default function TablaEmployee({ employees }) {
+  const [filterText, setFilterText] = useState("");
 
-  const filteredData = useMemo(() => {
-    if (!filterText) return employees;
-    const lowerFilter = filterText.toLowerCase();
-    return employees.filter(item =>
-      Object.values(item).some(
-        val => val && val.toString().toLowerCase().includes(lowerFilter)
+  const filteredEmployees = useMemo(() => {
+    const lower = filterText.toLowerCase();
+    return employees.filter(emp =>
+      Object.values(emp).some(
+        val => val?.toString().toLowerCase().includes(lower)
       )
     );
   }, [filterText, employees]);
 
+  const availableText = val => (val ? "Yes" : "No");
+
+  const handleMoreInfo = async (social_id) => {
+    try {
+      const res = await axios.get(`/EmployeeWithSocialId/${social_id}`);
+      const { employee, address, reference, workHistory } = res.data;
+
+      const military = [{
+        branch: employee.branch || 'N/A',
+        start_services: employee.start_services || 'N/A',
+        end_services: employee.end_services || 'N/A',
+      }];
+
+      MySwal.fire({
+        title: `${employee.name} ${employee.lastname}`,
+        html: (
+          <EmployeeDetailTable
+            address={address}
+            workHistory={workHistory}
+            references={reference}
+            military={military}
+          />
+        ),
+        showConfirmButton: false,
+        showCloseButton: true,
+        footer: `
+          <div class="flex justify-center gap-4 mt-4">
+            <a href="/storage/${employee.social_id}/certifications.zip" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Download Certifications</a>
+            <a href="/storage/${employee.social_id}/resume.pdf" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download Resume</a>
+          </div>
+        `,
+        width: "80%",
+        customClass: {
+          popup: "swal-wide",
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      MySwal.fire("Error fetching employee data");
+    }
+  };
+
   const columns = [
+    { name: "Name", selector: r => r.name, sortable: true, center: true },
+    { name: "Social ID", selector: r => r.social_id, sortable: true, center: true },
+    { name: "State", selector: r => r.state, sortable: true, center: true },
+    { name: "Travel", selector: r => availableText(r.available_for_travel), center: true },
+    { name: "Applied", selector: r => r.jobs_applied, center: true },
     {
-      name: 'Name',
-      selector: row => row.name,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'Social ID',
-      selector: row => row.social_id,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'State',
-      selector: row => row.state,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'Available for Travel',
-      selector: row => row.available_for_travel ? 'Yes' : 'No',
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'Jobs Applied',
-      selector: row => row.jobs_applied,
-      sortable: false,
-      center: true,
-    },
-    {
-      name: 'Download Info',
+      name: "",
       cell: row => (
         <button
-          onClick={() => handleDownload(row)}
-          className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-700 transition text-sm"
+          className="bg-red-600 text-white px-3 py-1 rounded text-sm"
+          onClick={() => handleMoreInfo(row.social_id)}
         >
-          Download
+          More Info
         </button>
       ),
       ignoreRowClick: true,
-      allowOverflow: true,
       button: true,
       center: true,
     },
   ];
 
-  const handleDownload = (row) => {
-    // aqui pudiera ir una pagina de carga
-    MySwal.fire({
-      icon: 'info',
-      title: 'Download',
-      text: `Downloading info for ${row.name}... (placeholder)`,
-    });
-  };
-
   const customStyles = {
     headCells: {
       style: {
-        backgroundColor: '#b91c1c',
-        color: '#fef2f2',
-        fontWeight: 'bold',
-        fontSize: '14px',
-        justifyContent: 'center',
+        backgroundColor: "#b91c1c",
+        color: "#fef2f2",
+        fontWeight: "bold",
+        fontSize: "14px",
+        justifyContent: "center",
       },
     },
     rows: {
       style: {
-        fontSize: '14px',
-        textAlign: 'center',
+        fontSize: "14px",
+        textAlign: "center",
       },
       highlightOnHoverStyle: {
-        backgroundColor: '#fee2e2',
-        borderBottomColor: '#fca5a5',
-        outline: '1px solid #b91c1c',
+        backgroundColor: "#fee2e2",
+        borderBottomColor: "#fca5a5",
+        outline: "1px solid #b91c1c",
       },
     },
     pagination: {
       style: {
-        fontSize: '12px'
+        fontSize: "12px",
       },
     },
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-lg w-full flex flex-col">
-      <div className="flex justify-between items-center border-b-4 border-red-700 pb-2">
-      </div>
-
       <div className="mt-4 flex justify-start">
         <div className="mb-4 flex items-center bg-gray-100 rounded-full px-3 py-1 w-[280px]">
           <svg
@@ -132,7 +136,7 @@ export default function TablaEmployee({ employees, setEmployees }) {
 
       <DataTable
         columns={columns}
-        data={filteredData}
+        data={filteredEmployees}
         pagination
         highlightOnHover
         pointerOnHover

@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import FormularioComponente from "@/Components/FormularioOccupation";
 import FormularioComponenteEdicion from "@/Components/formUpdateOccupation"; // Ruta correcta
+import TablePostulation from "@/Components/tablaPostulation"; // Ruta correcta
 
 const MySwal = withReactContent(Swal);
 
@@ -48,13 +49,28 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
     );
   }, [filterText, occupations]);
 
-  const columns = [
-    {
-      name: 'Id',
-      selector: row => row.id,
-      sortable: true,
-      center: true,
+  const handleViewApplicants = (occupationId) => {
+  MySwal.fire({
+    html: <TablePostulation occupationId={occupationId} />,
+    width: '1300px',
+    showCloseButton: true,
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    background: '#f0f0f0', // Fondo gris del modal
+    backdrop: 'rgba(0, 0, 0, 0.4)', // Fondo oscuro detrás
+    customClass: {
+      popup: 'overflow-auto max-h-[90vh] p-4 fixed-height-modal' ,
     },
+    didOpen: () => {
+      // Optional: auto-scroll to top if content is long
+      document.querySelector('.swal2-html-container')?.scrollTo(0, 0);
+    }
+  });
+};
+
+
+  const columns = [
+
     {
       name: 'Name',
       selector: row => row.name,
@@ -79,12 +95,19 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       sortable: true,
       center: true,
     },
-    {
-      name: 'Applications',
-      selector: row => row.applications,
-      sortable: true,
-      center: true,
-    },
+{
+  name: 'Applications',
+  center: true,
+  cell: row => (
+    <button
+      className="text-blue-600 underline hover:text-blue-800 transition"
+      onClick={() => handleViewApplicants(row.id)} // assuming row.id is the occupation ID
+    >
+      View
+    </button>
+  )
+},
+
     {
       name: 'Status',
       selector: row => row.status === 1 ? 'Active' : 'Inactive',

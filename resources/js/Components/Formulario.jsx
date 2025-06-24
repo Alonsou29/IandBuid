@@ -43,6 +43,10 @@ export default function Formulario({ selectedJob }) {
     email: '',
     phone: '',
     willingToTravel: '',
+    immigrationStatus: '',
+    visaExpiryDate: '',
+    workAuthorization: false,
+    countryOfOrigin: '',
     dfac: '',
     branch: '',
     airport: '',
@@ -56,6 +60,7 @@ export default function Formulario({ selectedJob }) {
     referred: '',
     referredBy: '',
     certifications: [],
+    resume: null,
     occupation_id: selectedJob?.id || '',
   });
 
@@ -175,15 +180,17 @@ if (step === 3) {
   const requiredFields = [
     'firstName', 'lastName', 'dob',
     'street', 'city', 'state', 'zip',
-    'email', 'phone', 'willingToTravel'
+    'email', 'phone', 'willingToTravel',
+    'immigrationStatus', // siempre requerido
   ];
 
   const newErrors = {};
 
-  // Validar campos vacíos
+  // Validar campos vacíos y mostrar toast para cada uno
   requiredFields.forEach(field => {
     if (!formData[field] || String(formData[field]).trim() === '') {
       newErrors[field] = true;
+      showErrorToast(`Please complete the field: ${field}`);
     }
   });
 
@@ -210,19 +217,45 @@ if (step === 3) {
     }
   }
 
-  // Actualiza el estado con los errores detectados
+  // Validación condicional por immigrationStatus
+  const status = formData.immigrationStatus;
+
+  if (status === 'Work Visa' || status === 'Student Visa') {
+    // visaExpiryDate obligatorio y válido
+    if (!formData.visaExpiryDate || formData.visaExpiryDate.trim() === '') {
+      newErrors.visaExpiryDate = true;
+      showErrorToast("Visa expiry date is required for Work or Student Visa.");
+    } else if (!isValidDate(formData.visaExpiryDate)) {
+      newErrors.visaExpiryDate = true;
+      showErrorToast("Please enter a valid visa expiry date in MM/DD/YYYY format.");
+    }
+  }
+
+  // Work Authorization solo requerido si Work Visa
+  if (status === 'Work Visa') {
+    if (!formData.workAuthorization) {
+      newErrors.workAuthorization = true;
+      showErrorToast("Authorization to work is required for Work Visa.");
+    }
+  }
+
+  // Si no es Citizen, countryOfOrigin obligatorio
+  if (status && status !== 'Citizen') {
+    if (!formData.countryOfOrigin || formData.countryOfOrigin.trim() === '') {
+      newErrors.countryOfOrigin = true;
+      showErrorToast("Country of origin is required if status is not Citizen.");
+    }
+  }
+
   setErrores(newErrors);
 
-  // Si hay errores, no continuar
   if (Object.keys(newErrors).length > 0) {
-    // Opcional: si quieres mostrar mensaje general además de los toasts, descomenta:
-    // showErrorToast("Please complete all required fields.");
     return false;
   }
 
-  // Si no hay errores, continuar con el flujo
   return true;
 }
+
 
 
 
@@ -425,13 +458,14 @@ if (step === 7) {
 
     // --- MANEJO DE ARCHIVOS ---
   // Validación y agregado de archivo resume (PDF max 5MB, máximo 1 archivo)
-  const handleFileChange = (e) => {
-  const maxSizeMB = 5;
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+ const handleFileChange = (e) => {
+  const selectedFile = e.target.files[0];
+  if (selectedFile) {
+    setFiles([selectedFile]); // si sigues usando `files`, mantenlo para la UI
+    setFormData(prev => ({ ...prev, resume: selectedFile })); // <-- esto es lo importante
+  }
 
-  const selected = Array.from(e.target.files).filter(
-    (file) => file.type === 'application/pdf'
-  );
+
 
   // Validar tamaño individual
   const oversizedFiles = selected.filter((file) => file.size > maxSizeBytes);
@@ -543,10 +577,15 @@ const handleSubmit = async (e) => {
     formPayload.append('workHistory', JSON.stringify(validHistory));
   }
 
-  Object.entries(normalizedData).forEach(([key, value]) => {
+Object.entries(normalizedData).forEach(([key, value]) => {
   if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
   formPayload.append(key, value);
 });
+
+if (formData.resume) {
+  formPayload.append('resume', formData.resume); // clave debe coincidir con el backend
+}
+
 
 
   // Ahora sí, luego de armar formPayload, puedes ver su contenido
@@ -670,7 +709,6 @@ const handleSubmit = async (e) => {
   <input
     type="file"
     accept="application/pdf"
-    multiple
     onChange={handleFileChange}
     className="block mb-4 w-full max-w-md mt-10"
   />
@@ -866,7 +904,79 @@ const handleSubmit = async (e) => {
       </div>
     </div>
   </div>
-</>
+
+      {/* Estado Migratorio */}
+      <div className="mt-10 border-t border-gray-300 pt-6 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4 text-center">Immigration Status</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Current Immigration Status */}
+    <div>
+      <label className="text-left block text-sm font-medium text-gray-700">Current Immigration Status</label>
+      <select
+        name="immigrationStatus"
+        value={formData.immigrationStatus || ''}
+        onChange={handleChange}
+        className={`w-full border rounded px-3 py-2 ${errores.immigrationStatus ? 'border-red-500' : ''}`}
+      >
+        <option value="">Select status</option>
+        <option value="Citizen">Citizen</option>
+        <option value="Permanent Resident">Permanent Resident</option>
+        <option value="Work Visa">Work Visa</option>
+        <option value="Student Visa">Student Visa</option>
+        <option value="Visitor">Visitor</option>
+        <option value="Refugee">Refugee</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    {/* Visa Expiry Date */}
+ <div>
+  <label className="text-left block text-sm font-medium text-gray-700">Visa / Permit Expiry Date</label>
+  <div className="flex justify-start">
+    <ReactDatePicker
+      selected={formData.visaExpiryDate ? parse(formData.visaExpiryDate, "MM/dd/yyyy", new Date()) : null}
+      onChange={(date) => {
+        const formatted = date ? format(date, "MM/dd/yyyy") : "";
+        handleChange({ target: { name: "visaExpiryDate", value: formatted } });
+      }}
+      placeholderText="MM/DD/YYYY"
+      dateFormat="MM/dd/yyyy"
+      className={`w-full border rounded px-3 py-2 ${errores.visaExpiryDate ? "border-red-500" : ""}`}
+      dropdownMode="select"
+    />
+  </div>
+</div>
+
+
+    {/* Authorized to Work */}
+    <div className="flex items-center gap-2">
+      <input
+        id="workAuthorization"
+        name="workAuthorization"
+        type="checkbox"
+        checked={formData.workAuthorization || false}
+        onChange={e => setFormData(prev => ({ ...prev, workAuthorization: e.target.checked }))}
+        className="h-4 w-4 accent-red-600"
+      />
+      <label htmlFor="workAuthorization" className="text-sm font-medium text-gray-700">
+        Authorized to work in the country
+      </label>
+    </div>
+
+    {/* Country of Origin */}
+    <div>
+      <label className="text-left block text-sm font-medium text-gray-700">Country of Origin</label>
+      <input
+        name="countryOfOrigin"
+        placeholder="Country of Origin"
+        value={formData.countryOfOrigin || ''}
+        onChange={handleChange}
+        className={`w-full border rounded px-3 py-2 ${errores.countryOfOrigin ? 'border-red-500' : ''}`}
+      />
+    </div>
+  </div>
+  </div>
+  </>
 
       )}
 
@@ -1271,6 +1381,11 @@ const handleSubmit = async (e) => {
             <p className='text-left'><strong>Email:</strong> {formData.email || '-'}</p>
             <p className='text-left'><strong>Phone:</strong> {formData.phone || '-'}</p>
             <p className='text-left'><strong>willingToTravel:</strong> {formData.willingToTravel || '-'}</p>
+            <p className='text-left'><strong>Immigration Status:</strong> {formData.immigrationStatus || '-'}</p>
+            <p className='text-left'><strong>Visa / Permit Expiry Date:</strong> {formData.visaExpiryDate || '-'}</p>
+            <p className='text-left'><strong>Authorized to Work:</strong> {formData.workAuthorization ? 'Yes' : 'No'}</p>
+            <p className='text-left'><strong>Country of Origin:</strong> {formData.countryOfOrigin || '-'}</p>
+
           </section>
 
           <section>

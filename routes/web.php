@@ -73,4 +73,6 @@ Route::get('/prueba', function (){
 
 });
 
+
+
 require __DIR__.'/auth.php';

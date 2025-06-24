@@ -294,7 +294,7 @@ export default function Welcome() {
       <section id="contact" className="w-full flex flex-col md:flex-row min-h-[600px]">
         {/* Lado Izquierdo */}
         <div className="w-full md:w-1/3 bg-black text-white flex flex-col justify-center items-center px-8 py-12 text-center space-y-6">
-          <img src="/logo.png" alt="I & C Builders Logo" className="h-52 md:h-60 mb-4" />
+          <img src="/Logo.png" alt="I & C Builders Logo" className="h-52 md:h-60 mb-4" />
 
           <div>
             <h3 className="text-3xl md:text-4xl font-bold font-spartan">I & C Builders</h3>
@@ -389,12 +389,12 @@ export default function Welcome() {
 <footer className="relative bg-white py-10 text-center text-black text-sm sm:text-base font-spartan font-extrabold">
   © 2024 I and C Builders - All rights reserved.
 
-  <a
+  {/* <a
     href="/login"
     className="absolute bottom-4 right-6 text-red-600 hover:underline text-xs sm:text-sm font-normal"
   >
     Administrador
-  </a>
+  </a> */}
 </footer>
 
 

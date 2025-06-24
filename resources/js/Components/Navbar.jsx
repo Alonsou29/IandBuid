@@ -33,7 +33,7 @@ export default function Navbar() {
             <img
             src="/Logo.png"
             alt="Logo"
-            className=" h-12 md:h-16 w-auto ml-auto md:ml-0"
+            className=" md:mt-10 h-12 md:h-20 w-auto ml-auto md:ml-0"
             />
         </div>
 
