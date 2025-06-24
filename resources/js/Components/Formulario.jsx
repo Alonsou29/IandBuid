@@ -587,7 +587,14 @@ if (formData.resume) {
 }
 
 if (formData.certifications){
-    formPayload.append('certifications', formData.certifications)
+    if (formData.certifications.length > 0) {
+      formData.certifications.forEach((file) => {
+        formPayload.append('certifications[]', file); // ¡Aquí la clave es 'certifications[]'!
+      });
+    } else {
+      console.warn("No hay archivos seleccionados para subir.");
+      return; // O maneja el error como prefieras
+    }
 }
 
 

@@ -142,7 +142,7 @@ class EmployeeController extends Controller
             if ($request->hasFile('certifications')) {
                 foreach ($request->file('certifications') as $certFile) {
                     $numberCtf = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-                    $path = $certFile->storeAs('certifications',$request->social_id."_ctf_".$numberCtf.".".$certFile->extensions(),$this->disk);
+                    $path = $certFile->storeAs('certifications',$request->social_id."_ctf_".$numberCtf.".".$certFile->extension(),$this->disk);
 
                     $employee->documents()->create([
                         'type' => 'certification',
@@ -152,7 +152,7 @@ class EmployeeController extends Controller
             }
 
 
-            return response()->json(['msg'=>$employee, 'certification'=>$request->hasFile('certifications')], 201);
+            return response()->json(['msg'=>$employee, 'certifications'=>$request->certifications], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
