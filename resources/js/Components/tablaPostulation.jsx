@@ -44,12 +44,18 @@ export default function TablePostulation({ occupationId, occupationName }) {
     alert(`Downloading certificates for ${applicant.name} ${applicant.lastname}`);
   };
 
-  const handleDownloadResume = (applicant) => {
+  const handleDownloadResume =  (applicant) => {
     alert(`Downloading resume for ${applicant.name} ${applicant.lastname}`);
+    axios.get(`/downloadFile/resumes/${applicant.social_id}_cv.pdf`).then(()=>{
+        console.log('download exitoso!');
+    });
   };
 
   const handleDownloadContract = (applicant) => {
     alert(`Downloading contract for ${applicant.name} ${applicant.lastname}`);
+    //     axios.get(`/downloadFile/contracts/${applicant.social_id}.pdf`).then(()=>{
+    //     console.log('download exitoso!');
+    // });
   };
 
   const columns = [

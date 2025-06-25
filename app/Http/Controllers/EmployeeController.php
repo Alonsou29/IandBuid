@@ -82,9 +82,9 @@ class EmployeeController extends Controller
                 'start_services'=>$request->startDate,
                 'end_services'=>$request->endDate,
                 'isRefered'=>$request->referred,
-                'military_desc'=>'terrestre',
+                'military_desc'=>$request->branch,
                 'isContract'=>false,
-                'status'=>$request->immigrationStatus,
+                'status'=>$request->immigrationStatus == 'Other' ? $request->otherImmigrationStatus : $request->immigrationStatus,
             ]);
             $address = $employee->addresses()->create([
                 'state'=>$request->state,
@@ -93,37 +93,37 @@ class EmployeeController extends Controller
                 'zip'=>$request->zip
             ]);
 
-             // Decodificar referencias JSON
-        $ref = json_decode($request->references, true);
-        if (is_array($ref)) {
-            foreach ($ref as $person) {
-                if (!empty($person['name'])) {
-                    $employee->references()->create([
-                        'fullname' => $person['name'],
-                        'phone_number' => $person['phone'],
-                        'email' => $person['email'],
-                    ]);
+                // Decodificar referencias JSON
+            $ref = json_decode($request->references, true);
+            if (is_array($ref)) {
+                foreach ($ref as $person) {
+                    if (!empty($person['name'])) {
+                        $employee->references()->create([
+                            'fullname' => $person['name'],
+                            'phone_number' => $person['phone'],
+                            'email' => $person['email'],
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Decodificar historial laboral JSON
-        $works = json_decode($request->workHistory, true);
-        if (is_array($works)) {
-            foreach ($works as $work) {
-                if (!empty($work['employer'])) {
-                    $employee->workHistorys()->create([
-                        'emplo_name' => $work['employer'],
-                        'phone_number' => $work['phone'],
-                        'start_work' => $work['start'],
-                        'end_work' => $work['end'],
-                        'title' => $work['title'],
-                        'duties' => $work['duties'],
-                        'reason_leaving' => $work['reason'],
-                    ]);
+            // Decodificar historial laboral JSON
+            $works = json_decode($request->workHistory, true);
+            if (is_array($works)) {
+                foreach ($works as $work) {
+                    if (!empty($work['employer'])) {
+                        $employee->workHistorys()->create([
+                            'emplo_name' => $work['employer'],
+                            'phone_number' => $work['phone'],
+                            'start_work' => $work['start'],
+                            'end_work' => $work['end'],
+                            'title' => $work['title'],
+                            'duties' => $work['duties'],
+                            'reason_leaving' => $work['reason'],
+                        ]);
+                    }
                 }
             }
-        }
 
             if(!empty($request->occupation_id)){
                 $employee->occupations()->attach($request->occupation_id);
@@ -149,6 +149,16 @@ class EmployeeController extends Controller
                         'url' => $path,
                     ]);
                 }
+            }
+
+            if($request->hasFile('contractFile')){
+                $contract = $request->file('contractFile');
+                $contract_path = $contract->storeAs('contracts',$request->social_id."_".time().".".$contract->extension(), $this->disk);
+
+                $employee->documents()->create([
+                    'type' => 'contract',
+                    'url' => $contract_path
+                ]);
             }
 
 
