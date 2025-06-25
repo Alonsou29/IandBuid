@@ -32,13 +32,13 @@ export default function Login({ status, canResetPassword }) {
             )}
 
             <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="User" />
+                <div className='mt-4'>
+                    <InputLabel htmlFor="Email" value="User" />
 
                     <TextInput
-                        id="user"
-                        type="user"
-                        name="user"
+                        id="name"
+                        type="name"
+                        name="name"
                         value={data.name}
                         className="mt-1 block w-full"
                         autoComplete="username"

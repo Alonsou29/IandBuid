@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use ZipArchive;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -178,11 +179,57 @@ class EmployeeController extends Controller
         }
     }
 
-    public function downloadFile(Request $request,$folder,$name){
+    public function downloadFile(Resquest $request,$folder, $name){
         if(Storage::disk($this->disk)->exists($folder."/".$name)){
-            return Storage::disk($this->disk)->download($folder."/".$name);
+            dd(Storage::disk($this->disk)->download($folder."/".$name));
         }
-        return response()->json(['msg'=>'file_no_exist']);
+        return 'file_no_exist';
+    }
+
+    public function filesBySocialId(Request $request, $socialId, $type){
+        try{
+            $employee = Employee::find($socialId);
+
+            $doc = $employee->documents()->where('type',$type)->get();
+
+            if(count($doc)<1){
+                foreach($doc as $document){
+                    if(Storage::disk($this->disk)->exists($document->url)){
+                        return Storage::disk($this->disk)->download($document->url);
+                    }
+                }
+            }else{
+                $filesCompress = [];
+                $filesCompressName = 'certification_'.$employee->name.".zip";
+                $tempPath = storage_path("app/public/" . $filesCompressName );
+                $zip = new ZipArchive();
+
+                foreach($doc as $document){
+                    if(Storage::disk($this->disk)->exists($document->url)){
+                        array_push($filesCompress, $document->url);
+                    }
+                }
+                
+                if($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true){
+                    foreach($filesCompress as $filePath){
+                        if(Storage::disk($this->disk)->exists($filePath)){
+                            $fileBody = Storage::disk($this->disk)->get($filePath);
+                            $zip->addFromString(basename($filePath), $fileBody);
+                        }else{
+                            $path= "";
+                        }
+
+                    }
+                }
+                $zip->close();
+                return response()->download($tempPath, $filesCompressName)->deleteFileAfterSend(true);
+            }
+
+
+            return response()->json([$doc, 'msg'=>$type]);
+        }catch(ValidationException $e){
+            return response()->json(['msg'=> $e]);
+        }
     }
 
     public function deleteEmployee(Request $request, $socialId){

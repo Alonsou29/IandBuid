@@ -40,22 +40,77 @@ export default function TablePostulation({ occupationId, occupationName }) {
     return 'N/A';
   };
 
-  const handleDownloadCertificate = (applicant) => {
-    alert(`Downloading certificates for ${applicant.name} ${applicant.lastname}`);
+  const handleDownloadCertificate = async (applicant) => {
+    try {
+      const response = await axios.get(`/download/${applicant.social_id}/resume`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `certifications_${applicant.name}_${applicant.lastname}_${applicant.social_id}.zip`); // Nombre de archivo sugerido
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+    }
+    
   };
 
-  const handleDownloadResume =  (applicant) => {
-    alert(`Downloading resume for ${applicant.name} ${applicant.lastname}`);
-    axios.get(`/downloadFile/resumes/${applicant.social_id}_cv.pdf`).then(()=>{
-        console.log('download exitoso!');
-    });
+  const handleDownloadResume = async (applicant) => {
+    try {
+      const response = await axios.get(`/download/${applicant.social_id}/resume`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `resume_${applicant.name}_${applicant.lastname}_${applicant.social_id}.pdf`); // Nombre de archivo sugerido
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+    }
   };
 
-  const handleDownloadContract = (applicant) => {
-    alert(`Downloading contract for ${applicant.name} ${applicant.lastname}`);
-    //     axios.get(`/downloadFile/contracts/${applicant.social_id}.pdf`).then(()=>{
-    //     console.log('download exitoso!');
-    // });
+  const handleDownloadContract = async (applicant) => {
+    try {
+      const response = await axios.get(`/download/${applicant.social_id}/contract`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contract_${applicant.name}_${applicant.lastname}_${applicant.social_id}.docx`); // Nombre de archivo sugerido
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+    }
   };
 
   const columns = [

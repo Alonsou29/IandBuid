@@ -3,7 +3,7 @@ import { Head } from "@inertiajs/react";
 import Navbar2 from '/resources/js/Components/Navbar2';
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import Formulario from "/resources/js/Components/Formulario"; // Ajusta la ruta si es distinta
+import Formulario from "../Components/Formulario"; // Ajusta la ruta si es distinta
 
 const MySwal = withReactContent(Swal);
 

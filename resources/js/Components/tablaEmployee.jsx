@@ -46,8 +46,8 @@ export default function TablaEmployee({ employees }) {
         showCloseButton: true,
         footer: `
           <div class="flex justify-center gap-4 mt-4">
-            <a href="/storage/${employee.social_id}/certifications.zip" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Download Certifications</a>
-            <a href="/storage/${employee.social_id}/resume.pdf" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download Resume</a>
+            <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Download Certifications</a>
+            <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download Resume</a>
           </div>
         `,
         width: "80%",
