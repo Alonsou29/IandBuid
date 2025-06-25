@@ -20,6 +20,7 @@ const steps = [
   'Work History',
   'Additional Information',
   'Submit',
+  'Contract',
 ];
 
 export default function Formulario({ selectedJob }) {
@@ -44,9 +45,7 @@ export default function Formulario({ selectedJob }) {
     phone: '',
     willingToTravel: '',
     immigrationStatus: '',
-    visaExpiryDate: '',
-    workAuthorization: false,
-    countryOfOrigin: '',
+    otherImmigrationStatus: '',
     dfac: '',
     branch: '',
     airport: '',
@@ -60,6 +59,7 @@ export default function Formulario({ selectedJob }) {
     referred: '',
     referredBy: '',
     certifications: [],
+    contractFile: null,
     resume: null,
     occupation_id: selectedJob?.id || '',
   });
@@ -175,6 +175,44 @@ const validateCurrentStep = () => {
   }
 
 
+
+if (step === 2) {
+  const newErrors = {};
+  const maxFileSize = 3 * 1024 * 1024;
+
+  // Resume
+  if (formData.resume) {
+    if (formData.resume.size > maxFileSize) {
+      const msg = 'Resume must be 3MB or less.';
+      newErrors.resume = msg;
+      showErrorToast(msg);
+    }
+  }
+
+  // Certifications
+  if (formData.certifications) {
+    if (formData.certifications.length > 7) {
+      const msg = 'You can upload up to 7 certification files.';
+      newErrors.certifications = msg;
+      showErrorToast(msg);
+    }
+
+    const oversized = formData.certifications.filter(file => file.size > maxFileSize);
+    if (oversized.length > 0) {
+      const msg = 'Each certification must be 3MB or less.';
+      newErrors.certifications = msg;
+      showErrorToast(msg);
+    }
+  }
+
+  setErrores(newErrors);
+  return Object.keys(newErrors).length === 0;
+}
+
+
+
+
+
   // Paso 2 - Información Personal
 if (step === 3) {
   const requiredFields = [
@@ -214,36 +252,6 @@ if (step === 3) {
     if (!emailPattern.test(formData.email)) {
       newErrors.email = true;
       showErrorToast("Please enter a valid email address.");
-    }
-  }
-
-  // Validación condicional por immigrationStatus
-  const status = formData.immigrationStatus;
-
-  if (status === 'Work Visa' || status === 'Student Visa') {
-    // visaExpiryDate obligatorio y válido
-    if (!formData.visaExpiryDate || formData.visaExpiryDate.trim() === '') {
-      newErrors.visaExpiryDate = true;
-      showErrorToast("Visa expiry date is required for Work or Student Visa.");
-    } else if (!isValidDate(formData.visaExpiryDate)) {
-      newErrors.visaExpiryDate = true;
-      showErrorToast("Please enter a valid visa expiry date in MM/DD/YYYY format.");
-    }
-  }
-
-  // Work Authorization solo requerido si Work Visa
-  if (status === 'Work Visa') {
-    if (!formData.workAuthorization) {
-      newErrors.workAuthorization = true;
-      showErrorToast("Authorization to work is required for Work Visa.");
-    }
-  }
-
-  // Si no es Citizen, countryOfOrigin obligatorio
-  if (status && status !== 'Citizen') {
-    if (!formData.countryOfOrigin || formData.countryOfOrigin.trim() === '') {
-      newErrors.countryOfOrigin = true;
-      showErrorToast("Country of origin is required if status is not Citizen.");
     }
   }
 
@@ -458,37 +466,81 @@ if (step === 7) {
 
     // --- MANEJO DE ARCHIVOS ---
   // Validación y agregado de archivo resume (PDF max 5MB, máximo 1 archivo)
- const handleFileChange = (e) => {
-  const selectedFile = e.target.files[0];
-  if (selectedFile) {
-    setFiles([selectedFile]); // si sigues usando `files`, mantenlo para la UI
-    setFormData(prev => ({ ...prev, resume: selectedFile })); // <-- esto es lo importante
+const handleFileChange = (e, fieldName) => {
+  const selected = Array.from(e.target.files);
+  const maxFileSize = 3 * 1024 * 1024; // 3MB
+
+  if (fieldName === 'resume' || fieldName === 'contract') {
+    const file = selected[0];
+    if (!file) return;
+
+    if (file.size > maxFileSize) {
+      setErrorMsg(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be 3MB or less.`);
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
+
+    // Para resume y contract solo un archivo permitido
+    if ((fieldName === 'resume' && files.length >= 1) || 
+        (fieldName === 'contract' && formData.contractFile)) {
+      setErrorMsg(`You can upload only 1 ${fieldName} file.`);
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
+
+    if(fieldName === 'resume') {
+      setFiles([file]);
+      setFormData(prev => ({ ...prev, resume: file }));
+    } else if(fieldName === 'contract') {
+      setFormData(prev => ({ ...prev, contractFile: file }));
+    }
+
+    setErrorMsg(null);
   }
 
+  if (fieldName === 'certifications') {
+    const oversized = selected.filter(f => f.size > maxFileSize);
+    if (oversized.length > 0) {
+      setErrorMsg('Each certification must be 3MB or less.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
 
+    const combined = [...(formData.certifications || []), ...selected];
 
-  // Validar tamaño individual
-  const oversizedFiles = selected.filter((file) => file.size > maxSizeBytes);
-  if (oversizedFiles.length > 0) {
-    setErrorMsg(`Each file must be 5MB or less.`);
-    setTimeout(() => setErrorMsg(null), 2500);
-    return;
+    if (combined.length > 7) {
+      setErrorMsg('You can upload up to 7 certification files.');
+      setTimeout(() => setErrorMsg(null), 2500);
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, certifications: combined }));
+    setErrorMsg(null);
   }
-
-  if (selected.length + files.length > 1) {
-    setErrorMsg('You can upload a maximum of 1 PDF file.');
-    setTimeout(() => setErrorMsg(null), 2500);
-    return;
-  }
-
-  setErrorMsg(null); // Limpia mensaje si no hay error
-  setFiles([...files, ...selected]);
 };
 
-  const handleRemoveFile = (index) => {
-    const updated = files.filter((_, i) => i !== index);
-    setFiles(updated);
-  };
+// Manejar la eliminación del archivo contract
+const handleRemoveContractFile = () => {
+  setFormData(prev => ({ ...prev, contractFile: null }));
+};
+
+// Eliminar certificado
+const handleRemoveCertFile = (index) => {
+  setFormData(prev => ({
+    ...prev,
+    certifications: prev.certifications.filter((_, i) => i !== index)
+  }));
+};
+
+// Eliminar resume
+const handleRemoveFile = (index) => {
+  const updated = files.filter((_, i) => i !== index);
+  setFiles(updated);
+  if (updated.length === 0) {
+    setFormData(prev => ({ ...prev, resume: null }));
+  }
+};
+
 
     // Validación y agregado de archivos de certificación (solo PDF y max 5MB)
  const handleCertFileChange = (e) => {
@@ -522,14 +574,6 @@ if (step === 7) {
 };
 
 
-const handleRemoveCertFile = (index) => {
-  setFormData(prev => {
-    const updated = [...prev.certifications];
-    updated.splice(index, 1);
-    return { ...prev, certifications: updated };
-  });
-};
-
 
   // --- FUNCIONES AUXILIARES ---
   // Verifica si un objeto está vacío o todos sus valores son cadenas vacías
@@ -556,7 +600,11 @@ const handleSubmit = async (e) => {
     dob: formatDateToMySQL(formData.dob),
     startDate: formatDateToMySQL(formData.startDate),
     endDate: formatDateToMySQL(formData.endDate),
+    occupation_id: parseInt(formData.occupation_id),
+
   };
+
+  
 
   const formPayload = new FormData();
 
@@ -604,27 +652,28 @@ if (formData.certifications){
     console.log(`${pair[0]}: ${pair[1]}`);
   }
 
-  try {
-    const response = await axios.post('/createEmployee', formPayload, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    console.log('Cliente registrado:', cleanData);
-    MySwal.fire('Success', 'Form submitted successfully!', 'success');
-  } catch (error) {
+try {
+  const response = await axios.post('/createEmployee', formPayload, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+  console.log('Cliente registrado:', response.data); // <-- usa esto
+  MySwal.fire('Success', 'Form submitted successfully!', 'success');
+} catch (error) {
   if (error.response) {
     console.error('Error response data:', error.response.data);
-    console.log('Error response data:', error.response.data);
     if (error.response.data.validator) {
       const validatorErrors = error.response.data.validator.errors || error.response.data;
-      console.log('Errores de validación:', validatorErrors);
-      setErrorMsg(JSON.stringify(validatorErrors, null, 2)); // Formatea para legibilidad
+      setErrorMsg(JSON.stringify(validatorErrors, null, 2));
     } else {
       setErrorMsg('Error en la validación del formulario.');
     }
   } else {
+    console.error('Error general:', error); // Añade este log
     setErrorMsg("There was a problem submitting the form. Please try again.");
   }
 }
+
 
 };
 
@@ -705,6 +754,9 @@ if (formData.certifications){
           errores.social_id ? 'border-red-500' : ''
         }`}
       />
+        {errores.social_id && (
+    <p className="text-red-500 text-sm mt-1">{errores.email[0]}</p>
+  )}
     </div>
   </div>
 </>
@@ -721,7 +773,7 @@ if (formData.certifications){
   <input
     type="file"
     accept="application/pdf"
-    onChange={handleFileChange}
+    onChange={(e) => handleFileChange(e, 'resume')}
     className="block mb-4 w-full max-w-md mt-10"
   />
   {files.length > 0 && (
@@ -746,12 +798,8 @@ if (formData.certifications){
 </div>
 
       )}
-        {errorMsg && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm animate-fade-in">
-            {errorMsg}
-          </div>
-        )}
-
+        
+        
 
       {/* Paso 3 - Personal Information */}
       {step === 3 && (
@@ -918,12 +966,15 @@ if (formData.certifications){
   </div>
 
       {/* Estado Migratorio */}
-      <div className="mt-10 border-t border-gray-300 pt-6 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-center">Immigration Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div className="mt-10 border-t border-gray-300 pt-6 max-w-4xl mx-auto">
+  <h2 className="text-2xl font-bold mb-4 text-center">Immigration Status</h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {/* Current Immigration Status */}
     <div>
-      <label className="text-left block text-sm font-medium text-gray-700">Current Immigration Status</label>
+      <label className="text-left block text-sm font-medium text-gray-700">
+        Current Immigration Status
+      </label>
       <select
         name="immigrationStatus"
         value={formData.immigrationStatus || ''}
@@ -933,61 +984,27 @@ if (formData.certifications){
         <option value="">Select status</option>
         <option value="Citizen">Citizen</option>
         <option value="Permanent Resident">Permanent Resident</option>
-        <option value="Work Visa">Work Visa</option>
-        <option value="Student Visa">Student Visa</option>
-        <option value="Visitor">Visitor</option>
-        <option value="Refugee">Refugee</option>
         <option value="Other">Other</option>
       </select>
     </div>
 
-    {/* Visa Expiry Date */}
- <div>
-  <label className="text-left block text-sm font-medium text-gray-700">Visa / Permit Expiry Date</label>
-  <div className="flex justify-start">
-    <ReactDatePicker
-      selected={formData.visaExpiryDate ? parse(formData.visaExpiryDate, "MM/dd/yyyy", new Date()) : null}
-      onChange={(date) => {
-        const formatted = date ? format(date, "MM/dd/yyyy") : "";
-        handleChange({ target: { name: "visaExpiryDate", value: formatted } });
-      }}
-      placeholderText="MM/DD/YYYY"
-      dateFormat="MM/dd/yyyy"
-      className={`w-full border rounded px-3 py-2 ${errores.visaExpiryDate ? "border-red-500" : ""}`}
-      dropdownMode="select"
-    />
+    {/* Additional field if status is "Other" */}
+    {formData.immigrationStatus === 'Other' && (
+      <div>
+        <label className="text-left block text-sm font-medium text-gray-700">
+          Please specify
+        </label>
+        <input
+          type="text"
+          name="otherImmigrationStatus"
+          value={formData.otherImmigrationStatus || ''}
+          onChange={handleChange}
+          className="w-full border rounded px-3 py-2"
+        />
+      </div>
+    )}
   </div>
 </div>
-
-
-    {/* Authorized to Work */}
-    <div className="flex items-center gap-2">
-      <input
-        id="workAuthorization"
-        name="workAuthorization"
-        type="checkbox"
-        checked={formData.workAuthorization || false}
-        onChange={e => setFormData(prev => ({ ...prev, workAuthorization: e.target.checked }))}
-        className="h-4 w-4 accent-red-600"
-      />
-      <label htmlFor="workAuthorization" className="text-sm font-medium text-gray-700">
-        Authorized to work in the country
-      </label>
-    </div>
-
-    {/* Country of Origin */}
-    <div>
-      <label className="text-left block text-sm font-medium text-gray-700">Country of Origin</label>
-      <input
-        name="countryOfOrigin"
-        placeholder="Country of Origin"
-        value={formData.countryOfOrigin || ''}
-        onChange={handleChange}
-        className={`w-full border rounded px-3 py-2 ${errores.countryOfOrigin ? 'border-red-500' : ''}`}
-      />
-    </div>
-  </div>
-  </div>
   </>
 
       )}
@@ -1318,40 +1335,10 @@ if (formData.certifications){
             onChange={handleChange}
             className={`border rounded px-3 py-2 w-full mb-3 ${errores.additionalInfo?.referredBy ? 'border-red-500' : ''}`}
           />
-
-<label className="block font-semibold mb-1">
-  Please upload any certifications in the following areas: WRT certification, forklift operator, asbestos certification, scissors lift certification.
-</label>
-<input
-  type="file"
-  accept="application/pdf"
-  multiple
-  onChange={handleCertFileChange}
-  className="block mb-4 w-full"
-/>
-
-{formData.certifications.length > 0 && (
-  <div className="flex flex-wrap gap-2">
-    {formData.certifications.map((file, index) => (
-      <div
-        key={index}
-        className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
-      >
-        <span className="truncate">{file.name}</span>
-        <button
-          type="button"
-          onClick={() => handleRemoveCertFile(index)}
-          className="ml-2 text-red-600 hover:text-red-800 font-bold"
-        >
-          ×
-        </button>
-      </div>
-    ))}
-  </div>
+ </>
 )}
 
-        </>
-      )}
+
 
         {/* Paso 8 - Confirmación */}
       {step === 8 && (
@@ -1442,20 +1429,100 @@ if (formData.certifications){
             <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Additional Information</h3>
             <p className='text-left'><strong>Referred:</strong> {formData.referred || '-'}</p>
             <p className='text-left'><strong>If yes, who?:</strong> {formData.referredBy || '-'}</p>
-            <p className='text-left'><strong>Certifications:</strong></p>
-            {formData.certifications && formData.certifications.length > 0 ? (
-              <ul className="list-disc list-inside">
-                {formData.certifications.map((file, i) => (
-                  <li key={i}>{file.name}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="ml-2">No certification files uploaded.</p>
-            )}
+
 
           </section>
         </div>
       )}
+
+        {/* Paso 8 - contrato */}
+        {step === 9 && (
+  <div className="flex flex-col gap-8">
+    {/* CONTRACT SECTION */}
+    <div className="text-center">
+      <h2 className="font-bold text-lg mb-2">📄 Contract Upload</h2>
+      <p className="mb-4">
+        <strong>PLEASE DOWNLOAD</strong><br />
+        For a more effective assignment process for your job application, kindly download this document, complete the contract information, and then re-upload it to this section.
+      </p>
+
+      {/* Download + Re-upload */}
+      <div className="flex justify-center gap-4 mb-6">
+        <a
+          href="/files/employment_contract.docx"
+          download
+          className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition shadow"
+        >
+          Download Contract
+        </a>
+
+        <label className="bg-gray-100 text-gray-800 px-5 py-2 rounded-md cursor-pointer border border-gray-300 hover:bg-gray-200 transition shadow">
+          Re-upload Contract
+          <input
+            type="file"
+            accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={(e) => handleFileChange(e, 'contract')}
+            className="hidden"
+          />
+        </label>
+      </div>
+
+
+
+      {/* Show uploaded contract file */}
+      {formData.contractFile && (
+        <div className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate">
+          <span className="truncate">{formData.contractFile.name}</span>
+          <button
+            type="button"
+            onClick={handleRemoveContractFile}
+            className="ml-2 text-red-600 hover:text-red-800 font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* CERTIFICATIONS SECTION */}
+    <div>
+      <h2 className="font-bold text-lg mb-2">📎 Certifications (Optional)</h2>
+      <p className="mb-2">
+        You may upload any certificates that strengthen your work experience in this section. This is optional, and not having one will not affect the personnel selection process.
+      </p>
+
+      <input
+        type="file"
+        accept="application/pdf"
+        multiple
+        onChange={(e) => handleFileChange(e, 'certifications')}
+        className="block mb-4 w-full"
+      />
+
+      {/* Show uploaded certification files */}
+      {formData.certifications.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {formData.certifications.map((file, index) => (
+            <div
+              key={index}
+              className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
+            >
+              <span className="truncate">{file.name}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveCertFile(index)}
+                className="ml-2 text-red-600 hover:text-red-800 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
 
     </form>
