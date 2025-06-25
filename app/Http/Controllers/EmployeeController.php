@@ -78,12 +78,12 @@ class EmployeeController extends Controller
                 'birthday'=>$request->dob,
                 'apply_occupations'=>false,
                 'avaible_travel'=>$request->willingToTravel,
-                'airport'=>$request->airport,
+                'airport'=>$request->dfac ? $request->airport : "N/A" ,
                 'military_services'=>$request->dfac,
                 'start_services'=>$request->startDate,
                 'end_services'=>$request->endDate,
                 'isRefered'=>$request->referred,
-                'military_desc'=>$request->branch,
+                'military_desc'=>$request->dfac ? $request->branch : "N/A",
                 'isContract'=>false,
                 'status'=>$request->immigrationStatus == 'Other' ? $request->otherImmigrationStatus : $request->immigrationStatus,
             ]);
@@ -192,7 +192,7 @@ class EmployeeController extends Controller
 
             $doc = $employee->documents()->where('type',$type)->get();
 
-            if(count($doc)<1){
+            if(count($doc) < 1){
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
                         return Storage::disk($this->disk)->download($document->url);
