@@ -1440,7 +1440,7 @@ try {
   <div className="flex flex-col gap-8">
     {/* CONTRACT SECTION */}
     <div className="text-center">
-      <h2 className="font-bold text-lg mb-2">📄 Contract Upload</h2>
+      <h2 className="font-bold text-lg mb-2">📄 Employee Worksheet Upload</h2>
       <p className="mb-4">
         <strong>PLEASE DOWNLOAD</strong><br />
         For a more effective assignment process for your job application, kindly download this document, complete the contract information, and then re-upload it to this section.
