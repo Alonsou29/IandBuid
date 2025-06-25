@@ -75,7 +75,7 @@ const showErrorToast = (msg) => {
   // --- FUNCIONES DE NAVEGACIÓN ---
   // Avanzar al siguiente paso con validación
   const handleNext = async (e)  => {
-    e.preventDefault();
+  e.preventDefault();
 
     // Validar campos del paso actual
     if (!validateCurrentStep()) {
@@ -111,10 +111,11 @@ const showErrorToast = (msg) => {
 
         });
         setStep(prev => prev + 6);
-      }
+    }
     });
   }
 
+  // Si no entró en el bloque anterior, avanzar normalmente
   setStep(prev => prev + 1);
 };
 
@@ -470,54 +471,55 @@ const handleFileChange = (e, fieldName) => {
   const selected = Array.from(e.target.files);
   const maxFileSize = 3 * 1024 * 1024; // 3MB
 
+  if (!selected.length) return;
+
+  // Resume o Contract
   if (fieldName === 'resume' || fieldName === 'contract') {
     const file = selected[0];
-    if (!file) return;
 
     if (file.size > maxFileSize) {
-      setErrorMsg(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be 3MB or less.`);
-      setTimeout(() => setErrorMsg(null), 2500);
+      showErrorToast(`${fieldName === 'resume' ? 'Resume' : 'Contract'} must be 3MB or less.`);
       return;
     }
 
-    // Para resume y contract solo un archivo permitido
-    if ((fieldName === 'resume' && files.length >= 1) || 
-        (fieldName === 'contract' && formData.contractFile)) {
-      setErrorMsg(`You can upload only 1 ${fieldName} file.`);
-      setTimeout(() => setErrorMsg(null), 2500);
-      return;
-    }
-
-    if(fieldName === 'resume') {
+    if (fieldName === 'resume') {
+      if (files.length >= 1) {
+        showErrorToast('You can upload only 1 resume file.');
+        return;
+      }
       setFiles([file]);
       setFormData(prev => ({ ...prev, resume: file }));
-    } else if(fieldName === 'contract') {
+    }
+
+    if (fieldName === 'contract') {
+      if (formData.contractFile) {
+        showErrorToast('You can upload only 1 contract file.');
+        return;
+      }
       setFormData(prev => ({ ...prev, contractFile: file }));
     }
 
-    setErrorMsg(null);
+    return;
   }
 
+  // Certifications
   if (fieldName === 'certifications') {
     const oversized = selected.filter(f => f.size > maxFileSize);
     if (oversized.length > 0) {
-      setErrorMsg('Each certification must be 3MB or less.');
-      setTimeout(() => setErrorMsg(null), 2500);
+      showErrorToast('Each certification must be 3MB or less.');
       return;
     }
 
     const combined = [...(formData.certifications || []), ...selected];
-
     if (combined.length > 7) {
-      setErrorMsg('You can upload up to 7 certification files.');
-      setTimeout(() => setErrorMsg(null), 2500);
+      showErrorToast('You can upload up to 7 certification files.');
       return;
     }
 
     setFormData(prev => ({ ...prev, certifications: combined }));
-    setErrorMsg(null);
   }
 };
+
 
 // Manejar la eliminación del archivo contract
 const handleRemoveContractFile = () => {
@@ -586,6 +588,39 @@ const handleRemoveFile = (index) => {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
+  // ✅ 1. Validación: contrato obligatorio
+  if (!formData.contractFile) {
+    showErrorToast("Please upload the completed contract before submitting.");
+    return;
+  }
+
+  // ✅ 2. Validación: tamaño máximo del resume
+  if (formData.resume) {
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+    if (formData.resume.size > maxSize) {
+      showErrorToast("Resume file must be smaller than 5MB.");
+      return;
+    }
+  }
+
+  // ✅ 3. Validaciones para certifications
+  if (formData.certifications && formData.certifications.length > 0) {
+    const maxCertFiles = 5;
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+
+    if (formData.certifications.length > maxCertFiles) {
+      showErrorToast("You can upload a maximum of 5 certification files.");
+      return;
+    }
+
+    const oversized = formData.certifications.find(file => file.size > maxSize);
+    if (oversized) {
+      showErrorToast(`Each certification file must be under 5MB. "${oversized.name}" is too large.`);
+      return;
+    }
+  }
+
+  // ✅ 4. Convertir fechas y normalizar datos
   const formatDateToMySQL = (dateStr) => {
     if (!dateStr) return '';
     const [month, day, year] = dateStr.split('/');
@@ -601,11 +636,9 @@ const handleSubmit = async (e) => {
     startDate: formatDateToMySQL(formData.startDate),
     endDate: formatDateToMySQL(formData.endDate),
     occupation_id: parseInt(formData.occupation_id),
-
   };
 
-  
-
+  // ✅ 5. Armar formPayload
   const formPayload = new FormData();
 
   const validRefs = normalizedData.references.filter(ref => !isEmptyObject(ref));
@@ -625,56 +658,52 @@ const handleSubmit = async (e) => {
     formPayload.append('workHistory', JSON.stringify(validHistory));
   }
 
-Object.entries(normalizedData).forEach(([key, value]) => {
-  if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
-  formPayload.append(key, value);
-});
-
-if (formData.resume) {
-  formPayload.append('resume', formData.resume); // clave debe coincidir con el backend
-}
-
-if (formData.certifications){
-    if (formData.certifications.length > 0) {
-      formData.certifications.forEach((file) => {
-        formPayload.append('certifications[]', file); // ¡Aquí la clave es 'certifications[]'!
-      });
-    } else {
-      console.warn("No hay archivos seleccionados para subir.");
-      return; // O maneja el error como prefieras
-    }
-}
-
-
-
-  // Ahora sí, luego de armar formPayload, puedes ver su contenido
-  for (const pair of formPayload.entries()) {
-    console.log(`${pair[0]}: ${pair[1]}`);
-  }
-
-try {
-  const response = await axios.post('/createEmployee', formPayload, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  Object.entries(normalizedData).forEach(([key, value]) => {
+    if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
+    formPayload.append(key, value);
   });
 
-  console.log('Cliente registrado:', response.data); // <-- usa esto
-  MySwal.fire('Success', 'Form submitted successfully!', 'success');
-} catch (error) {
-  if (error.response) {
-    console.error('Error response data:', error.response.data);
-    if (error.response.data.validator) {
-      const validatorErrors = error.response.data.validator.errors || error.response.data;
-      setErrorMsg(JSON.stringify(validatorErrors, null, 2));
-    } else {
-      setErrorMsg('Error en la validación del formulario.');
-    }
-  } else {
-    console.error('Error general:', error); // Añade este log
-    setErrorMsg("There was a problem submitting the form. Please try again.");
+  if (formData.resume) {
+    formPayload.append('resume', formData.resume);
   }
-}
 
+  if (formData.certifications && formData.certifications.length > 0) {
+    formData.certifications.forEach((file) => {
+      formPayload.append('certifications[]', file);
+    });
+  }
 
+  if (formData.contractFile) {
+    formPayload.append('contractFile', formData.contractFile);
+  }
+
+  // ✅ Debug opcional
+  for (const pair of formPayload.entries()) {
+    console.log(`${pair[0]}:`, pair[1]);
+  }
+
+  // ✅ Envío del formulario
+  try {
+    const response = await axios.post('/createEmployee', formPayload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    console.log('Cliente registrado:', response.data);
+    MySwal.fire('Success', 'Form submitted successfully!', 'success');
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      if (error.response.data.validator) {
+        const validatorErrors = error.response.data.validator.errors || error.response.data;
+        setErrorMsg(JSON.stringify(validatorErrors, null, 2));
+      } else {
+        setErrorMsg('Error en la validación del formulario.');
+      }
+    } else {
+      console.error('Error general:', error);
+      setErrorMsg("There was a problem submitting the form. Please try again.");
+    }
+  }
 };
 
 
