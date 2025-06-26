@@ -42,11 +42,11 @@ export default function TablePostulation({ occupationId, occupationName }) {
 
   const handleDownloadCertificate = async (applicant) => {
     try {
-      const response = await axios.get(`/download/${applicant.social_id}/resume`, {
+      const response = await axios.get(`/download/${applicant.social_id}/certification`, {
         responseType: 'blob',
       });
 
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 
       const url = window.URL.createObjectURL(blob);
 
@@ -62,7 +62,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
     } catch (error) {
       console.error('Error al descargar el archivo:', error);
     }
-    
+
   };
 
   const handleDownloadResume = async (applicant) => {
@@ -71,7 +71,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
         responseType: 'blob',
       });
 
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 
       const url = window.URL.createObjectURL(blob);
 
@@ -91,23 +91,36 @@ export default function TablePostulation({ occupationId, occupationName }) {
 
   const handleDownloadContract = async (applicant) => {
     try {
-      const response = await axios.get(`/download/${applicant.social_id}/contract`, {
-        responseType: 'blob',
-      });
+   const response = await axios.get(`/download/${applicant.social_id}/contract`, {
+      responseType: 'blob',
+    });
 
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    let filename = `contract_${applicant.social_id}_${applicant.name}.docx`;
+    const contentDisposition = response.headers['content-disposition'];
 
-      const url = window.URL.createObjectURL(blob);
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `contract_${applicant.name}_${applicant.lastname}_${applicant.social_id}.docx`); // Nombre de archivo sugerido
+    const url = window.URL.createObjectURL(new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    }));
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
 
-      window.URL.revokeObjectURL(url);
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    console.log(`Archivo "${filename}" descargado exitosamente.`);
+
     } catch (error) {
       console.error('Error al descargar el archivo:', error);
     }

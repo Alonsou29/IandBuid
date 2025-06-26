@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('ubication');
             $table->boolean('status');
-            $table->boolean('needCertificate');
+            $table->boolean('needCertificate')->default(false);
             $table->boolean('isDelete')->default(false);;
             $table->timestamps();
         });

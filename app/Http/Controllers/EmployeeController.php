@@ -192,9 +192,17 @@ class EmployeeController extends Controller
 
             $doc = $employee->documents()->where('type',$type)->get();
 
-            if(count($doc) < 1){
+            if($type == 'contract' || $type == 'resume'){
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
+                        if (ob_get_level()){
+                            ob_end_clean();
+                        }
+
+                        $headers = [
+                            'Content-Type'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        ];
+                        // return response()->donwload("app/public/",basename($document->url),$headers);
                         return Storage::disk($this->disk)->download($document->url);
                     }
                 }
@@ -209,7 +217,7 @@ class EmployeeController extends Controller
                         array_push($filesCompress, $document->url);
                     }
                 }
-                
+
                 if($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true){
                     foreach($filesCompress as $filePath){
                         if(Storage::disk($this->disk)->exists($filePath)){

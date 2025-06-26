@@ -25,7 +25,7 @@ class OccupationController extends Controller
             $item->status = $item->status == 1 ? 'Activo' : 'Inactivo';
             return $item;
         });
-        
+
         return Inertia::render("Occupations_Vista", ["occupations" => $mapped]);
     }
 
@@ -43,7 +43,7 @@ class OccupationController extends Controller
         try{
             $occupation = Occupation::find($id);
             $rq = $occupation->employees()->get();
-    
+
             return response()->json(['Employees'=>$rq],200);
         }catch(ValidationException $e){
             return response()->json(['msg'=>$e],400);
@@ -57,6 +57,7 @@ class OccupationController extends Controller
                 'type'=>$request->type,
                 'description'=>$request->description,
                 'ubication'=>$request->ubication,
+                // 'needCertification'
                 'status'=> (int) $request->status
             ]);
 
