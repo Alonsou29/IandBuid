@@ -101,13 +101,16 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
     
 {
   name: 'Status',
-cell: row => (
-<span className={`px-2 py-1 rounded-full text-sm font-medium ${row.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-  {row.status}
-</span>
+cell: row => {
+  const statusText = row.status === 1 || row.status === '1' || row.status === 'Active' ? 'Active' : 'Inactive';
+  const statusColor = statusText === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  return (
+    <span className={`px-2 py-1 rounded-full text-sm font-medium ${statusColor}`}>
+      {statusText}
+    </span>
+  );
+},
 
-
-),
 
   sortable: true,
   center: true,

@@ -204,7 +204,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
     },
     {
       name: 'Residence Status',
-      selector: row => row.state_migratory || 'N/A',
+      selector: row => row.status || 'N/A',
       center: true,
       minWidth: '140px',
       wrap: true,

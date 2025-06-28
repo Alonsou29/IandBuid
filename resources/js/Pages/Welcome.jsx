@@ -152,12 +152,12 @@ export default function Welcome() {
                 image={image}
                 className="flex-grow h-[480px]"
               />
-              <button
+              {/* <button
                 type="button"
                 className="mt-4 mx-12 border border-black text-black py-2 rounded-3xl hover:bg-black hover:text-white transition"
               >
                 Find out more
-              </button>
+              </button> */}
             </div>
           ))}
         </div>

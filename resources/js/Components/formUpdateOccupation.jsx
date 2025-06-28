@@ -70,8 +70,6 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
  if (typeof onSuccess === 'function') {
   const updatedData = response.data.data;
 
-  // ✅ Transformamos el status numérico a texto directamente
-  updatedData.status = updatedData.status === 1 ? 'Active' : 'Inactive';
 
   onSuccess(updatedData); // Ahora mandamos el status textual
 }

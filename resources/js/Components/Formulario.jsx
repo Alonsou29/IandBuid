@@ -24,7 +24,8 @@ const steps = [
 ];
 
 export default function Formulario({ selectedJob, prefilledData = null }) {
-  const [toastMessage, setToastMessage] = useState(null);
+const [successToastMessage, setSuccessToastMessage] = useState(null);
+const [errorToastMessage, setErrorToastMessage] = useState(null);
   const [errores, setErrores] = useState({});
   const [certFiles, setCertFiles] = useState([]);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -78,26 +79,40 @@ export default function Formulario({ selectedJob, prefilledData = null }) {
   });
 
 const formatDate = (value) => {
-  try {
-    const date = value instanceof Date ? value : new Date(value);
-    if (isNaN(date.getTime())) return '-';
+  if (!value) return '-'; // Si está vacío, null o undefined
 
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
+  let date;
 
-    return `${month}/${day}/${year}`;
-  } catch {
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === 'string' || typeof value === 'number') {
+    date = new Date(value);
+  } else {
     return '-';
   }
+
+  if (isNaN(date.getTime())) return '-'; // Fecha inválida
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${month}/${day}/${year}`;
 };
+
 
     // --- FUNCIONES PARA MANEJO DE MENSAJES ---
   // Mostrar mensaje tipo toast por 2.5 segundos
-const showErrorToast = (msg) => {
-  setToastMessage(msg);
-  setTimeout(() => setToastMessage(null), 2500);
+const showSuccessToast = (msg) => {
+  setSuccessToastMessage(msg);
+  setTimeout(() => setSuccessToastMessage(null), 2500);
 };
+
+const showErrorToast = (msg) => {
+  setErrorToastMessage(msg);
+  setTimeout(() => setErrorToastMessage(null), 2500);
+};
+
 
 
 // --- FUNCIONES DE NAVEGACIÓN ---
@@ -352,7 +367,7 @@ if (step === 3) {
 
   // Paso 3 - Experiencia Militar
 if (step === 4) {
-  const requiredFields = ['dfac', 'branch'];
+  const requiredFields = ['dfac'];
   const datePattern = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/;
 
   let hasEmptyFields = false;
@@ -604,57 +619,57 @@ const handleRemoveFile = (index) => {
   return Object.values(obj).every(value => String(value).trim() === '');
 };
 
-const showSimilarJobsModal = async (jobs, formData) => {
+const showSimilarJobsModal = async (jobs, formData, showSuccessToast, showErrorToast) => {
   await MySwal.fire({
     title: 'Other Jobs You May Like',
-    html: (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {jobs.map((job) => (
-          <div key={job.id} className="p-4 bg-white rounded shadow">
-            <h3 className="text-red-600 font-bold">{job.name}</h3>
-            <p className="text-sm"><strong>Type:</strong> {job.type}</p>
-            <p className="text-sm mb-2"><strong>Location:</strong> {job.ubication}</p>
+    html: `
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ${jobs.map((job) => `
+          <div class="p-4 bg-white rounded shadow">
+            <h3 class="text-red-600 font-bold">${job.name}</h3>
+            <p class="text-sm"><strong>Type:</strong> ${job.type}</p>
+            <p class="text-sm mb-2"><strong>Location:</strong> ${job.ubication}</p>
             <button
-              onClick={async () => {
-                try {
-                  MySwal.close();
-
-                  // ✅ Realiza la solicitud GET al aplicar con la misma info
-                  const response = await axios.get(`/employeeRelation/${formData.social_id}/${job.id}`);
-
-                  // Puedes hacer algo con response.data si necesitas
-                  console.log("Application successful:", response.data);
-
-                  // Mostrar confirmación
-                  await MySwal.fire({
-                    icon: 'success',
-                    title: `You have successfully applied for ${job.name}`,
-                    showConfirmButton: true,
-                  });
-
-                } catch (error) {
-                  console.error("Error applying for job:", error);
-                  await MySwal.fire({
-                    icon: 'error',
-                    title: 'Failed to apply',
-                    text: 'There was a problem applying to this job. Please try again later.',
-                  });
-                }
-              }}
-              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 mt-2"
+              class="apply-btn bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 mt-2"
+              data-job-id="${job.id}"
+              data-job-name="${job.name}"
             >
               Apply with Same Info
             </button>
           </div>
-        ))}
+        `).join('')}
       </div>
-    ),
+    `,
     showConfirmButton: false,
     showCloseButton: true,
     width: '80%',
     background: '#f9f9f9',
+    didOpen: () => {
+      const container = MySwal.getHtmlContainer();
+      const buttons = container.querySelectorAll('.apply-btn');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const jobId = btn.getAttribute('data-job-id');
+          const jobName = btn.getAttribute('data-job-name');
+
+          try {
+            const res = await axios.get(`/employeeRelation/${formData.social_id}/${jobId}`);
+            console.log("Application successful:", response.data);
+            showSuccessToast(res.data.msg || `You have successfully applied for ${jobName}`);
+            btn.disabled = true;
+            btn.textContent = 'Applied';
+            btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+          } catch (error) {
+            console.error("Error applying:", error);
+            showErrorToast(`Failed to apply for ${jobName}`);
+          }
+        });
+      });
+    }
   });
 };
+
 
 
 
@@ -813,7 +828,8 @@ try {
                 const similarJobs = similarRes.data;
 
                 if (similarJobs.length > 0) {
-                    await showSimilarJobsModal(similarJobs, formData);
+                    await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
+
                 }
                 } catch (error) {
                 console.error('Error fetching similar jobs:', error);
@@ -845,7 +861,7 @@ try {
                 const similarJobs = similarRes.data;
 
                 if (similarJobs.length > 0) {
-                    await showSimilarJobsModal(similarJobs, formData);
+                    await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
                 }
                 } catch (error) {
                 console.error('Error fetching similar jobs:', error);
@@ -924,9 +940,15 @@ try {
 
       )}
 
-{toastMessage && (
+{successToastMessage && (
+  <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade-in">
+    {successToastMessage}
+  </div>
+)}
+
+{errorToastMessage && (
   <div className="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade-in">
-    {toastMessage}
+    {errorToastMessage}
   </div>
 )}
 
@@ -1648,13 +1670,6 @@ try {
             ))}
           </section>
 
-          <section>
-            <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Additional Information</h3>
-            <p className='text-left'><strong>Referred:</strong> {formData.referred || '-'}</p>
-            <p className='text-left'><strong>If yes, who?:</strong> {formData.referredBy || '-'}</p>
-
-
-          </section>
         </div>
       )}
 
