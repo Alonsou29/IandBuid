@@ -230,6 +230,8 @@ class EmployeeController extends Controller
                         ];
                         // return response()->donwload("app/public/",basename($document->url),$headers);
                         return Storage::disk($this->disk)->download($document->url);
+                    }else{
+                        return response()->json(['msg'=>'no upload file this employee']);
                     }
                 }
             }else{
@@ -241,6 +243,8 @@ class EmployeeController extends Controller
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
                         array_push($filesCompress, $document->url);
+                    }else{
+                        return response()->json(['msg'=>'no upload files this employee']);
                     }
                 }
 
@@ -250,7 +254,7 @@ class EmployeeController extends Controller
                             $fileBody = Storage::disk($this->disk)->get($filePath);
                             $zip->addFromString(basename($filePath), $fileBody);
                         }else{
-                            $path= "";
+
                         }
 
                     }

@@ -52,7 +52,7 @@ export default function TablaEmployee({ employees }) {
             <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
               Download Resume
             </a>
-            <a href="/download/${employee.social_id}/driver-license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+            <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
               Download Driver License
             </a>
           </div>

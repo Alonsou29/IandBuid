@@ -87,7 +87,44 @@ export default function TablePostulation({ occupationId, occupationName }) {
     } catch (error) {
       console.error('Error al descargar el archivo:', error);
     }
-  };
+  }
+
+  const handleDownloadDriverLicense = async (applicant)=>{
+        try {
+            const response = await axios.get(`/download/${applicant.social_id}/license`, {
+                responseType: 'blob',
+        });
+
+    let filename = `driverLicense_${applicant.social_id}_${applicant.name}.jpg`;
+    const contentDisposition = response.headers['content-disposition'];
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const url = window.URL.createObjectURL(new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    }));
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    console.log(`Archivo "${filename}" descargado exitosamente.`);
+
+    } catch (error) {
+      console.error('Error al descargar el archivo:', error);
+    }
+  }
 
   const handleDownloadContract = async (applicant) => {
     try {
