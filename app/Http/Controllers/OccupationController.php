@@ -111,15 +111,14 @@ class OccupationController extends Controller
     }
 
     public function similarJobs(Request $request)
-{
+    {
     $types = $request->input('types'); // Array de strings
 
     if (empty($types) || !is_array($types)) {
         return response()->json(['error' => 'Invalid types format. Expecting an array.'], 400);
     }
 
-    $jobs = DB::table('occupations')
-        ->where('isDelete', false)
+    $jobs = Occupation::where('isDelete', false)
         ->where('status', 1) // solo "Activo"
         ->where(function ($query) use ($types) {
             foreach ($types as $type) {

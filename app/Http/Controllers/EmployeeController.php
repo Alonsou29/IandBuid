@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Address;
 use App\Models\Document;
+use App\Models\Occupation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -34,6 +35,23 @@ class EmployeeController extends Controller
             return Inertia::render("Employees", ["employees"=>$Employee]);
         }catch(ValidationException $e){
             return response()->json([$e],400);
+        }
+    }
+
+    public function employeeRelation(Request $request, $socialId, $occupationId){
+        try{
+            $occupation = Occupation::where('id',$occupationId)
+            ->where('isDelete', false)->get();
+            $employee = Employee::find($socialId);
+
+            if(!empty($occupation)){
+                $employee->occupations()->attach($occupationId);
+                return response()->json(['msg'=>'Postulation Success!'],200);
+            }else{
+                return response()->json(['msg'=>'Postulation Error'],430);
+            }
+        }catch(ValidantionException $e){
+            return response()->json(['msg'=>'Validate Error'], 400);
         }
     }
 
