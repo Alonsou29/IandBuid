@@ -67,9 +67,15 @@ function FormularioComponenteEdicion({ recursoId, onSuccess }) { // Asume que re
       console.log('Recurso actualizado exitosamente:', response.data);
 
         // ✅ Llamar a onSuccess con la data actualizada
-    if (typeof onSuccess === 'function') {
-      onSuccess(response.data.data); // <-- ESTA LÍNEA es la clave
-    }
+ if (typeof onSuccess === 'function') {
+  const updatedData = response.data.data;
+
+  // ✅ Transformamos el status numérico a texto directamente
+  updatedData.status = updatedData.status === 1 ? 'Active' : 'Inactive';
+
+  onSuccess(updatedData); // Ahora mandamos el status textual
+}
+
 
       // Opcional: Redirigir al usuario o hacer algo más después de la actualización exitosa
       // history.push('/alguna-otra-pagina');

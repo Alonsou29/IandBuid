@@ -5,6 +5,7 @@ import axios from 'axios';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { parse, format } from 'date-fns';
+import ClipLoader from "react-spinners/ClipLoader";
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 const MySwal = withReactContent(Swal);
@@ -27,6 +28,7 @@ export default function Formulario({ selectedJob, prefilledData = null }) {
   const [errores, setErrores] = useState({});
   const [certFiles, setCertFiles] = useState([]);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(0);
   const [job, setJob] = useState(selectedJob || "");
   const showJobSelect = !selectedJob;
@@ -543,7 +545,7 @@ const handleFileChange = (e, fieldName) => {
     } else if (fieldName === 'driverLicenseImage') {
       setFormData(prev => ({ ...prev, driverLicenseImage: file }));
     } else if (fieldName === 'contract') {
-      setFormData(prev => ({ ...prev, contract: file }));
+      setFormData(prev => ({ ...prev, contractFile: file }));
     }
   }
 
@@ -590,40 +592,6 @@ const handleRemoveFile = (index) => {
 };
 
 
-    // Validación y agregado de archivos de certificación (solo PDF y max 5MB)
- const handleCertFileChange = (e) => {
-  const maxSizeMB = 5;
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
-  const selectedFiles = Array.from(e.target.files);
-
-  // Filtra solo PDFs válidos
-  const validFiles = selectedFiles.filter(file => {
-    if (file.type !== 'application/pdf') {
-      setErrorMsg('Only PDF files are allowed for certifications.');
-      return false;
-    }
-    if (file.size > maxSizeBytes) {
-      setErrorMsg(`Each certification must be 5MB or less.`);
-      return false;
-    }
-    return true;
-  });
-
-  if (validFiles.length > 0) {
-    setErrorMsg(null);
-    setFormData(prev => ({
-      ...prev,
-      certifications: [...prev.certifications, ...validFiles]
-    }));
-  } else {
-    setTimeout(() => setErrorMsg(null), 2500);
-  }
-};
-
-
-
-  // --- FUNCIONES AUXILIARES ---
   // Verifica si un objeto está vacío o todos sus valores son cadenas vacías
 
   const isEmptyObject = (obj) => {
@@ -641,18 +609,31 @@ const showSimilarJobsModal = async (jobs, formData) => {
             <p className="text-sm"><strong>Type:</strong> {job.type}</p>
             <p className="text-sm mb-2"><strong>Location:</strong> {job.ubication}</p>
             <button
-              onClick={() => {
-                MySwal.close();
-                MySwal.fire({
-                  title: `Apply for ${job.name}`,
-                  html: <Formulario selectedJob={job} prefilledData={formData} />,
-                  showConfirmButton: false,
-                  showCloseButton: true,
-                  width: "80%",
-                  customClass: {
-                      popup: "overflow-auto max-h-[100vh] p-4 fixed-height-modal",
-                    },
-                });
+              onClick={async () => {
+                try {
+                  MySwal.close();
+
+                  // ✅ Realiza la solicitud GET al aplicar con la misma info
+                  const response = await axios.get(`/employeeRelation/${formData.social_id}/${job.id}`);
+                  
+                  // Puedes hacer algo con response.data si necesitas
+                  console.log("Application successful:", response.data);
+
+                  // Mostrar confirmación
+                  await MySwal.fire({
+                    icon: 'success',
+                    title: `You have successfully applied for ${job.name}`,
+                    showConfirmButton: true,
+                  });
+
+                } catch (error) {
+                  console.error("Error applying for job:", error);
+                  await MySwal.fire({
+                    icon: 'error',
+                    title: 'Failed to apply',
+                    text: 'There was a problem applying to this job. Please try again later.',
+                  });
+                }
               }}
               className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 mt-2"
             >
@@ -670,8 +651,10 @@ const showSimilarJobsModal = async (jobs, formData) => {
 };
 
 
+
 const handleSubmit = async (e) => {
   e.preventDefault();
+  setIsSubmitting(true); // ✅ Mostrar spinner
 
   // ✅ 2. Validación: tamaño máximo del resume
   if (formData.resume) {
@@ -821,6 +804,7 @@ try {
             console.error('Error fetching similar jobs:', error);
             // Opcional: manejar error con setErrorMsg o showErrorToast
             }
+            
         }
     }
   });
@@ -839,7 +823,9 @@ try {
     console.error('Error general:', error);
     setErrorMsg("There was a problem submitting the form. Please try again.");
   }
-}
+}   finally {
+    setIsSubmitting(false); // ✅ Ocultar spinner siempre
+  }
 };
 
 
@@ -908,8 +894,8 @@ try {
           Driver License
         </label>
         <input
-          onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ''))}
-          inputMode="numeric"
+  
+          inputMode="text"
           name="social_id"
           placeholder="Driver License"
           value={formData.social_id}
@@ -1736,6 +1722,13 @@ try {
           </div>
         )}
     </form>
+
+    {isSubmitting && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <ClipLoader size={60} color="#ffffff" />
+  </div>
+)}
+
       <div className="flex justify-between pt-6">
         {step > 0 && (
           <button type="button" onClick={handleBack} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">

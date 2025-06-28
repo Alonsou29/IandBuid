@@ -39,6 +39,9 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
     });
   };
 
+  console.log("Occupations data:", occupations);
+
+
   const filteredData = useMemo(() => {
     if (!filterText) return occupations;
     const lowerFilter = filterText.toLowerCase();
@@ -96,12 +99,20 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       center: true,
     },
     
-    {
-      name: 'Status',
-      selector: row => row.status === 1 ? 'Active' : 'Inactive',
-      sortable: true,
-      center: true,
-    },
+{
+  name: 'Status',
+cell: row => (
+<span className={`px-2 py-1 rounded-full text-sm font-medium ${row.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+  {row.status}
+</span>
+
+
+),
+
+  sortable: true,
+  center: true,
+},
+
     {
   name: 'Applications',
   center: true,

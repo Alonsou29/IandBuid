@@ -10,15 +10,19 @@ use Illuminate\Support\Facades\DB;
 
 class OccupationController extends Controller
 {
-    public function listarOccupations(){
-        $Occupation=Occupation::where('isDelete',false)->get();
+    public function listarOccupations()
+{
+    $occupations = Occupation::where('isDelete', false)->get();
 
-        $mapeo = $Occupation->map(function ($item) use ($Occupation){
-            $item['status'] = $item['status'] == 1 ? 'Acitvo':'Inactivo';
-        });
+    // Mapear correctamente y retornar el resultado
+    $mapped = $occupations->map(function ($item) {
+        $item->status = $item->status == 1 ? 'Active' : 'Inactive';
+        return $item;
+    });
 
-        return Inertia::render("Occupations", ["occupations"=>$Occupation]);
-    }
+    return Inertia::render("Occupations", ["occupations" => $mapped]);
+}
+
 
     public function vistaOccupations(){
         $Occupations = Occupation::where('isDelete',false)->get();
@@ -119,7 +123,6 @@ class OccupationController extends Controller
     }
 
     $jobs = Occupation::where('isDelete', false)
-        ->where('status', 1) // solo "Activo"
         ->where(function ($query) use ($types) {
             foreach ($types as $type) {
                 $query->orWhereRaw("FIND_IN_SET(?, REPLACE(type, ' ', '')) > 0", [trim($type)]);
