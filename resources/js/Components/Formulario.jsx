@@ -18,7 +18,6 @@ const steps = [
   'Military Experience',
   'References',
   'Work History',
-  'Additional Information',
   'Submit',
   'Contract',
 ];
@@ -67,8 +66,6 @@ export default function Formulario({ selectedJob, prefilledData = null }) {
           { employer: '', phone: '', start: null, end: null, title: '', duties: '', reason: '' },
           { employer: '', phone: '', start: null, end: null, title: '', duties: '', reason: '' },
         ],
-        referred: '',
-        referredBy: '',
         certifications: [],
         contractFile: null,
         resume: null,
@@ -488,36 +485,6 @@ if (step === 6) {
   setErrores(prev => ({ ...prev, workHistory: [] }));
 }
 
-if (step === 7) {
-  const newAdditionalErrors = {};
-
-  // Validar si se seleccionó una opción
-  if (!formData.referred || formData.referred === '') {
-    newAdditionalErrors.referred = true;
-  }
-
-  // Si la opción fue "yes", debe indicar quién refirió
-  if (formData.referred === 'yes' && (!formData.referredBy || formData.referredBy.trim() === '')) {
-    newAdditionalErrors.referredBy = true;
-  }
-
-  // Validar que todos los archivos sean PDF (opcional, ya está limitado con accept="application/pdf")
-  const invalidFiles = formData.certifications.filter(file => file.type !== 'application/pdf');
-  if (invalidFiles.length > 0) {
-    showErrorToast("Only PDF files are allowed for certifications.");
-    return false;
-  }
-
-  if (Object.keys(newAdditionalErrors).length > 0) {
-    setErrores(prev => ({ ...prev, additionalInfo: newAdditionalErrors }));
-    showErrorToast("Please complete the required fields in this section.");
-    return false;
-  }
-
-  // Limpiar errores si todo está bien
-  setErrores(prev => ({ ...prev, additionalInfo: {} }));
-}
-
   // Si todo está bien
   setErrores({});
   return true;
@@ -555,12 +522,13 @@ const handleFileChange = (e, fieldName) => {
 
   if (!selected.length) return;
 
-  // Resume o Contract
-  if (fieldName === 'resume' || fieldName === 'contract') {
+  // Resume, Contract o Driver License Image (solo 1 archivo)
+  if (['resume', 'contract', 'driverLicenseImage'].includes(fieldName)) {
     const file = selected[0];
 
     if (file.size > maxFileSize) {
-      showErrorToast(`${fieldName === 'resume' ? 'Resume' : 'Contract'} must be 3MB or less.`);
+      const fieldLabel = fieldName === 'resume' ? 'Resume' : fieldName === 'contract' ? 'Contract' : 'Driver License image';
+      showErrorToast(`${fieldLabel} must be 3MB or less.`);
       return;
     }
 
@@ -571,17 +539,11 @@ const handleFileChange = (e, fieldName) => {
       }
       setFiles([file]);
       setFormData(prev => ({ ...prev, resume: file }));
+    } else if (fieldName === 'driverLicenseImage') {
+      setFormData(prev => ({ ...prev, driverLicenseImage: file }));
+    } else if (fieldName === 'contract') {
+      setFormData(prev => ({ ...prev, contract: file }));
     }
-
-    if (fieldName === 'contract') {
-      if (formData.contractFile) {
-        showErrorToast('You can upload only 1 contract file.');
-        return;
-      }
-      setFormData(prev => ({ ...prev, contractFile: file }));
-    }
-
-    return;
   }
 
   // Certifications
@@ -601,6 +563,7 @@ const handleFileChange = (e, fieldName) => {
     setFormData(prev => ({ ...prev, certifications: combined }));
   }
 };
+
 
 
 // Manejar la eliminación del archivo contract
@@ -709,12 +672,6 @@ const showSimilarJobsModal = async (jobs, formData) => {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // ✅ 1. Validación: contrato obligatorio
-  if (!formData.contractFile) {
-    showErrorToast("Please upload the completed contract before submitting.");
-    return;
-  }
-
   // ✅ 2. Validación: tamaño máximo del resume
   if (formData.resume) {
     const maxSize = 5 * 1024 * 1024; // 5 MB
@@ -800,10 +757,15 @@ const formatDateToMySQL = (date) => {
     formPayload.append('workHistory', JSON.stringify(validHistory));
   }
 
-  Object.entries(normalizedData).forEach(([key, value]) => {
-    if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
+Object.entries(normalizedData).forEach(([key, value]) => {
+  if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
+
+  // Solo agregamos si el valor no es null, undefined o cadena vacía
+  if (value !== null && value !== undefined && value !== '') {
     formPayload.append(key, value);
-  });
+  }
+});
+
 
   if (formData.resume) {
     formPayload.append('resume', formData.resume);
@@ -927,66 +889,122 @@ try {
 
 
 {/* Paso 3 - Personal Information */}
-      {step === 1 && (
-<>
-  <div className="flex justify-center items-center min-h-[200px]"> {/* Ajusta min-h según el alto deseado */}
-    <div className="w-full max-w-xs">
-      <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
-        Driver License
-      </label>
-      <input
-        onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ''))}
-        inputMode="numeric"
-        name="social_id"
-        placeholder="Driver License"
-        value={formData.social_id}
-        onChange={handleChange}
-        className={`w-full border rounded px-3 py-2 ${
-          errores.social_id ? 'border-red-500' : ''
-        }`}
-      />
+{step === 1 && (
+  <>
+    <div className="flex justify-center items-center min-h-[200px]"> {/* Ajusta min-h según el alto deseado */}
+      <div className="w-full max-w-xs">
+        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+          Driver License
+        </label>
+        <input
+          onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ''))}
+          inputMode="numeric"
+          name="social_id"
+          placeholder="Driver License"
+          value={formData.social_id}
+          onChange={handleChange}
+          className={`w-full border rounded px-3 py-2 ${
+            errores.social_id ? 'border-red-500' : ''
+          }`}
+        />
         {errores.social_id && (
-    <p className="text-red-500 text-sm mt-1">{errores.email[0]}</p>
-  )}
-    </div>
-  </div>
-</>
+          <p className="text-red-500 text-sm mt-1">{errores.social_id[0]}</p>
+        )}
 
-      )}
+        {/* Campo para subir imagen del Driver License */}
+        <div className="flex flex-col items-center gap-2 mt-4">
+          <button
+            type="button"
+            onClick={() => document.getElementById('driverLicenseInput').click()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Upload Driver License Image
+          </button>
+
+          <span className="text-gray-600 text-sm">
+            {formData.driverLicenseImage
+              ? formData.driverLicenseImage.name
+              : 'No file selected'}
+          </span>
+
+          <input
+            id="driverLicenseInput"
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e, 'driverLicenseImage')}
+            className="hidden"
+          />
+
+          {/* Vista previa y botón para eliminar el archivo */}
+          {formData.driverLicenseImage && (
+            <div className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate mt-2">
+              <span className="truncate">{formData.driverLicenseImage.name}</span>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, driverLicenseImage: null }))}
+                className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                aria-label="Remove driver license image"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
 
       {/* Paso 2 - Resume */}
       {step === 2 && (
-<div className="flex flex-col items-center justify-center min-h-[290px]">
-  <p className="mb-3 text-center max-w-xl">
-    <strong>Got a resume?</strong> You can upload it in Word or PDF format and we'll use the information to pre-fill your application, saving you time! If you'd rather not upload one, just click <strong>'Next'</strong>.
-  </p>
-  <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
-  <input
-    type="file"
-    accept="application/pdf"
-    onChange={(e) => handleFileChange(e, 'resume')}
-    className="block mb-4 w-full max-w-md mt-10"
-  />
-  {files.length > 0 && (
-    <div className="flex flex-wrap gap-2 max-w-md">
-      {files.map((file, index) => (
-        <div
-          key={index}
-          className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
-        >
-          <span className="truncate">{file.name}</span>
+        <div className="flex flex-col items-center justify-center min-h-[290px]">
+          <p className="mb-3 text-center max-w-xl">
+            <strong>Got a resume?</strong> You can upload it in Word or PDF format and we'll use the information to pre-fill your application, saving you time! If you'd rather not upload one, just click <strong>'Next'</strong>.
+          </p>
+          <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
+          <div className="flex flex-col items-center gap-2 mt-10 max-w-md w-full">
           <button
             type="button"
-            onClick={() => handleRemoveFile(index)}
-            className="ml-2 text-red-600 hover:text-red-800 font-bold"
+            onClick={() => document.getElementById('resumeInput').click()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           >
-            ×
+            Choose Resume File
           </button>
+
+          <span className="text-gray-600 text-sm">
+            {formData.resume ? formData.resume.name : 'No resume file selected'}
+          </span>
+
+          <input
+            id="resumeInput"
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => handleFileChange(e, 'resume')}
+            className="hidden"
+          />
         </div>
-      ))}
-    </div>
-  )}
-</div>
+
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-2 max-w-md">
+              {files.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
+                >
+                  <span className="truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(index)}
+                    className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       )}
         
@@ -1028,26 +1046,24 @@ try {
           <div>
             <label className="text-left block text-sm font-medium text-gray-700">Date of Birth</label>
             <div className="flex justify-start">
-<ReactDatePicker
-  selected={
-    formData.dob
-      ? formData.dob instanceof Date
-        ? formData.dob
-        : parse(formData.dob, "MM/dd/yyyy", new Date())
-      : null
-  }
-  onChange={(date) => {
-    handleChange({ target: { name: "dob", value: date } }); // ← guarda como objeto Date directamente
-  }}
-  placeholderText="MM/DD/YYYY"
-  dateFormat="MM/dd/yyyy"
-  className={`w-full border rounded px-3 py-2 ${errores.dob ? "border-red-500" : ""}`}
-  dropdownMode="select"
-/>
-
+              <ReactDatePicker
+                selected={
+                  formData.dob
+                    ? formData.dob instanceof Date
+                      ? formData.dob
+                      : parse(formData.dob, "MM/dd/yyyy", new Date())
+                    : null
+                }
+                onChange={(date) => {
+                  handleChange({ target: { name: "dob", value: date } }); // ← guarda como objeto Date directamente
+                }}
+                placeholderText="MM/DD/YYYY"
+                dateFormat="MM/dd/yyyy"
+                className={`w-full border rounded px-3 py-2 ${errores.dob ? "border-red-500" : ""}`}
+                dropdownMode="select"
+              />
           </div>
-
-            </div>
+        </div>
       </div>
 
       {/* Contact Information */}
@@ -1436,17 +1452,15 @@ try {
           <div>
             <label className="block text-sm font-medium text-gray-700 text-left">Start Date</label>
               <div className="flex justify-start">
-
-
-<ReactDatePicker
-  selected={job.start || null}
-  onChange={(date) => {
-    handleWorkChange(i, 'start', date);
-  }}
-  dateFormat="MM/dd/yyyy"
-  placeholderText="MM/DD/YYYY"
-  className={`w-full border rounded px-3 py-2`}
-/>
+            <ReactDatePicker
+              selected={job.start || null}
+              onChange={(date) => {
+                handleWorkChange(i, 'start', date);
+              }}
+              dateFormat="MM/dd/yyyy"
+              placeholderText="MM/DD/YYYY"
+              className={`w-full border rounded px-3 py-2`}
+            />
           </div>
               </div>
 
@@ -1454,18 +1468,16 @@ try {
           <div>
             <label className="block text-sm font-medium text-gray-700 text-left">End Date</label>
               <div className="flex justify-start">
-<ReactDatePicker
-  selected={job.end || null}
-  onChange={(date) => {
-    handleWorkChange(i, 'end', date);
-  }}
-  dateFormat="MM/dd/yyyy"
-  placeholderText="MM/DD/YYYY"
-  className={`w-full border rounded px-3 py-2`}
-/>
+                <ReactDatePicker
+                  selected={job.end || null}
+                  onChange={(date) => {
+                    handleWorkChange(i, 'end', date);
+                  }}
+                  dateFormat="MM/dd/yyyy"
+                  placeholderText="MM/DD/YYYY"
+                  className={`w-full border rounded px-3 py-2`}
+                />
           </div>
-
-
               </div>
 
           {/* Title */}
@@ -1507,34 +1519,12 @@ try {
   </>
 )}
 
-      {/* Paso 7 - Additional Info */}
-      {step === 7 && (
-        <>
-          <label className="block font-semibold mb-1">Were you referred to FPS by someone?</label>
-          <select
-            name="referred"
-            value={formData.referred}
-            onChange={handleChange}
- className={`border rounded px-3 py-2 w-full mb-3 ${errores.additionalInfo?.referred ? 'border-red-500' : ''}`}
-          >
-            <option value="">-- Select --</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-          <input
-            name="referredBy"
-            placeholder="If yes, who?"
-            value={formData.referredBy}
-            onChange={handleChange}
-            className={`border rounded px-3 py-2 w-full mb-3 ${errores.additionalInfo?.referredBy ? 'border-red-500' : ''}`}
-          />
- </>
-)}
+
 
 
 
         {/* Paso 8 - Confirmación */}
-      {step === 8 && (
+      {step === 7 && (
         <div className="space-y-6 text-gray-800">
           <section>
             <p className="font-bold text-lg mb-2 border-b pb-1 text-center"><strong>Job:</strong> {job.name}</p>
@@ -1626,7 +1616,7 @@ try {
       )}
 
         {/* Paso 8 - contrato */}
-        {step === 9 && (
+        {step === 8 && (
           <div className="flex flex-col gap-8">
             {/* CONTRACT SECTION */}
             <div className="text-center">

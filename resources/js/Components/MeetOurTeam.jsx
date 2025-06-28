@@ -136,7 +136,7 @@ const MeetOurTeam = () => {
                         onClick={() => toggleExpanded(index)}
                         className="text-red-400 hover:underline text-lg"
                       >
-                        {isExpanded ? 'Ver menos ▲' : 'Ver más ▼'}
+                        {isExpanded ? 'See less ▲' : 'See more ▼'}
                       </button>
                     )}
                   </div>

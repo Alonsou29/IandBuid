@@ -46,10 +46,18 @@ export default function TablaEmployee({ employees }) {
         showCloseButton: true,
         footer: `
           <div class="flex justify-center gap-4 mt-4">
-            <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Download Certifications</a>
-            <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Download Resume</a>
+            <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+              Download Certifications
+            </a>
+            <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+              Download Resume
+            </a>
+            <a href="/download/${employee.social_id}/driver-license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+              Download Driver License
+            </a>
           </div>
         `,
+
         width: "80%",
         customClass: {
           popup: "swal-wide",
@@ -63,7 +71,7 @@ export default function TablaEmployee({ employees }) {
 
   const columns = [
     { name: "Name", selector: r => r.name, sortable: true, center: true },
-    { name: "Social ID", selector: r => r.social_id, sortable: true, center: true },
+    { name: "Driver License", selector: r => r.social_id, sortable: true, center: true },
     { name: "State", selector: r => r.state, sortable: true, center: true },
     { name: "Travel", selector: r => availableText(r.available_for_travel), center: true },
     { name: "Applied", selector: r => r.jobs_applied, center: true },

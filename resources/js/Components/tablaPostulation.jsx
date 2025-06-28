@@ -173,32 +173,41 @@ export default function TablePostulation({ occupationId, occupationName }) {
       wrap: true,
     },
     {
-      name: 'Download Info',
-      center: true,
-      minWidth: '260px',
-      cell: row => (
-        <div className="flex justify-center gap-2 flex-wrap">
-          <button
-            className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs"
-            onClick={() => handleDownloadCertificate(row)}
-          >
-            Certificates
-          </button>
-          <button
-            className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs"
-            onClick={() => handleDownloadResume(row)}
-          >
-            Resume
-          </button>
-          <button
-            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-xs"
-            onClick={() => handleDownloadContract(row)}
-          >
-            Contract
-          </button>
-        </div>
-      ),
-    },
+  name: 'Download Info',
+  center: true,
+  minWidth: '260px',
+  cell: row => (
+    <div className="flex flex-col items-center gap-y-2"> {/* vertical spacing */}
+      <div className="flex flex-wrap justify-center gap-2">
+        <button
+          className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs"
+          onClick={() => handleDownloadCertificate(row)}
+        >
+          Certificates
+        </button>
+        <button
+          className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs"
+          onClick={() => handleDownloadResume(row)}
+        >
+          Resume
+        </button>
+        <button
+          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-xs"
+          onClick={() => handleDownloadContract(row)}
+        >
+          Contract
+        </button>
+        <button
+          className="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700 text-xs"
+          onClick={() => handleDownloadDriverLicense(row)}
+        >
+          Driver License
+        </button>
+      </div>
+    </div>
+  ),
+},
+
   ];
 
   const customStyles = {
