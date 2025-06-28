@@ -7,29 +7,40 @@ import Formulario from "../Components/Formulario"; // Ajusta la ruta si es disti
 
 const MySwal = withReactContent(Swal);
 
-
 export default function Jobs({ occupations }) {
   const [filterStatus, setFilterStatus] = useState("All");
 
-  // Filtrar trabajos por estado
+  // Mapea los estados de "Activo"/"Inactivo" a "Available"/"Not Available"
+  const mappedJobs = useMemo(() =>
+    occupations.map((job) => ({
+      ...job,
+      status:
+        job.status === "Activo"
+          ? "Available"
+          : job.status === "Inactivo"
+          ? "Not Available"
+          : job.status,
+    })), [occupations]);
+
+  // Filtrar trabajos por estado mapeado
   const filteredJobs = useMemo(() => {
-    return occupations.filter((job) => {
-      return filterStatus === "All" || job.status === filterStatus;
-    });
-  }, [filterStatus, occupations]);
+    return filterStatus === "All"
+      ? mappedJobs
+      : mappedJobs.filter((job) => job.status === filterStatus);
+  }, [filterStatus, mappedJobs]);
 
   return (
     <>
-          <Navbar2 />
-      <Head  title="Occupations" />
+      <Navbar2 />
+      <Head title="Occupations" />
       <div className="bg-gray-100 min-h-screen py-12 px-4 sm:px-8 pt-24">
         <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
           Occupation Opportunities
         </h1>
 
-        {/* Filtro por estado */}
+        {/* Status filter */}
         <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {["All", "Activo", "Inactivo"].map((status) => (
+          {["All", "Available", "Not Available"].map((status) => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
@@ -44,7 +55,7 @@ export default function Jobs({ occupations }) {
           ))}
         </div>
 
-        {/* Cartas de trabajos */}
+        {/* Job cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {filteredJobs.map((job) => (
             <div
@@ -57,12 +68,12 @@ export default function Jobs({ occupations }) {
                 </h2>
                 <p className="mb-2">
                   <strong>Type:</strong>{" "}
-                  {job.type.split(',').map((tipo, i) => (
+                  {job.type.split(",").map((type, i) => (
                     <span
                       key={i}
                       className="inline-block bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full mr-1"
                     >
-                      {tipo.trim()}
+                      {type.trim()}
                     </span>
                   ))}
                 </p>
@@ -72,13 +83,13 @@ export default function Jobs({ occupations }) {
                 </p>
                 <p className="text-sm text-gray-700 mb-3">
                   <strong>Status:</strong>{" "}
-                  {job.status === 'Activo' ? (
+                  {job.status === "Available" ? (
                     <span className="inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">
-                      Disponible
+                      Available
                     </span>
                   ) : (
                     <span className="inline-block bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full">
-                      No disponible
+                      Not Available
                     </span>
                   )}
                 </p>
@@ -100,10 +111,10 @@ export default function Jobs({ occupations }) {
                     allowOutsideClick: false,
                     heightAuto: false,
                     width: "80%",
-                    background: '#f0f0f0', // Fondo gris del modal
-                    backdrop: 'rgba(0, 0, 0, 0.4)', // Fondo oscuro detrás
+                    background: "#f0f0f0",
+                    backdrop: "rgba(0, 0, 0, 0.4)",
                     customClass: {
-                      popup: 'overflow-auto max-h-[100vh] p-4 fixed-height-modal' ,
+                      popup: "overflow-auto max-h-[100vh] p-4 fixed-height-modal",
                     },
                   })
                 }

@@ -153,7 +153,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
       wrap: true,
     },
     {
-      name: 'State Migratory',
+      name: 'Residence Status',
       selector: row => row.state_migratory || 'N/A',
       center: true,
       minWidth: '140px',
@@ -218,7 +218,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg w-full h-[360px]">
+    <div className="bg-white p-4 rounded-lg shadow-lg w-full ">
       <h3 className="text-lg font-semibold mb-2 border-b-4 border-red-700 pb-1">
         Applicants for this Occupation
       </h3>

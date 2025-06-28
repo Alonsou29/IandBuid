@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Occupation;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+
 
 class OccupationController extends Controller
 {
@@ -106,5 +108,26 @@ class OccupationController extends Controller
             return response()->json([$e],400);
         }
     }
+
+    public function similarJobs(Request $request)
+{
+    $types = $request->input('types'); // Array de strings
+
+    if (empty($types) || !is_array($types)) {
+        return response()->json(['error' => 'Invalid types format. Expecting an array.'], 400);
+    }
+
+    $jobs = DB::table('occupations')
+        ->where('isDelete', false)
+        ->where('status', 1) // solo "Activo"
+        ->where(function ($query) use ($types) {
+            foreach ($types as $type) {
+                $query->orWhereRaw("FIND_IN_SET(?, REPLACE(type, ' ', '')) > 0", [trim($type)]);
+            }
+        })
+        ->get();
+
+    return response()->json($jobs, 200);
+}
 
 }

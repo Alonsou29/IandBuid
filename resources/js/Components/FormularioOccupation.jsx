@@ -78,7 +78,7 @@ function FormularioComponente({ onSuccess }) {
           onChange={e => setType(e.target.value)}
           required
           className="mb-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
-          placeholder="Enter type"
+          placeholder="Enter job type (separate with “,”)"
         />
 
         <label htmlFor="description" className="block mb-2 font-semibold text-gray-700">

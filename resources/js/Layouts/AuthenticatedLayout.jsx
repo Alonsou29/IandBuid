@@ -42,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     href={route('workers.index')}
                                     active={route().current('workers.index')}
                                 >
-                                    Workers
+                                    Employees
                                 </NavLink>
                             </div>
 
@@ -157,20 +157,20 @@ export default function AuthenticatedLayout({ header, children }) {
                             Occupations
                         </ResponsiveNavLink>
 
-{/*                         <ResponsiveNavLink
+                         <ResponsiveNavLink
                             href={route('workers.index')}
                             active={route().current('workers.index')}
                         >
-                            Workers
-                        </ResponsiveNavLink> */}
+                            Employees
+                        </ResponsiveNavLink> 
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">
                         <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
+                            <div className="text-base font-medium text-white">
                                 {user.name}
                             </div>
-                            <div className="text-sm font-medium text-gray-500">
+                            <div className="text-sm font-medium text-black">
                                 {user.email}
                             </div>
                         </div>

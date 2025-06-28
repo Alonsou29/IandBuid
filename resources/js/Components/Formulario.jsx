@@ -12,7 +12,7 @@ const MySwal = withReactContent(Swal);
 // Lista de pasos del formulario
 const steps = [
   'Job Information',
-  'Personal Information (Social ID)',
+  'Personal Information (Driver License)',
   'Resume Upload',
   'Personal Information',
   'Military Experience',
@@ -23,7 +23,7 @@ const steps = [
   'Contract',
 ];
 
-export default function Formulario({ selectedJob }) {
+export default function Formulario({ selectedJob, prefilledData = null }) {
   const [toastMessage, setToastMessage] = useState(null);
   const [errores, setErrores] = useState({});
   const [certFiles, setCertFiles] = useState([]);
@@ -32,37 +32,65 @@ export default function Formulario({ selectedJob }) {
   const [job, setJob] = useState(selectedJob || "");
   const showJobSelect = !selectedJob;
   const [files, setFiles] = useState([]);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    social_id: '',
-    dob: '',
-    street: '',
-    city: '',
-    state: '',
-    zip: '',
-    email: '',
-    phone: '',
-    willingToTravel: '',
-    immigrationStatus: '',
-    otherImmigrationStatus: '',
-    dfac: '',
-    branch: '',
-    airport: '',
-    startDate: '',
-    endDate: '',
-    references: [{ name: '', phone: '', email: '' }, { name: '', phone: '', email: '' }],
-    workHistory: [
-      { employer: '', phone: '', start: '', end: '', title: '', duties: '', reason: '' },
-      { employer: '', phone: '', start: '', end: '', title: '', duties: '', reason: '' },
-    ],
-    referred: '',
-    referredBy: '',
-    certifications: [],
-    contractFile: null,
-    resume: null,
-    occupation_id: selectedJob?.id || '',
+
+  const [formData, setFormData] = useState(() => {
+    if (prefilledData) {
+      return {
+        ...prefilledData,
+        occupation_id: selectedJob?.id || prefilledData.occupation_id || '',
+      };
+    } else {
+      return {
+        firstName: '',
+        lastName: '',
+        social_id: '',
+        dob: null,
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        email: '',
+        phone: '',
+        willingToTravel: '',
+        immigrationStatus: '',
+        otherImmigrationStatus: '',
+        dfac: '',
+        branch: '',
+        airport: '',
+        startDate: null,
+        endDate: null,
+        references: [
+          { name: '', phone: '', email: '' },
+          { name: '', phone: '', email: '' },
+        ],
+        workHistory: [
+          { employer: '', phone: '', start: null, end: null, title: '', duties: '', reason: '' },
+          { employer: '', phone: '', start: null, end: null, title: '', duties: '', reason: '' },
+        ],
+        referred: '',
+        referredBy: '',
+        certifications: [],
+        contractFile: null,
+        resume: null,
+        occupation_id: selectedJob?.id || '',
+      };
+    }
   });
+
+const formatDate = (value) => {
+  try {
+    const date = value instanceof Date ? value : new Date(value);
+    if (isNaN(date.getTime())) return '-';
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${month}/${day}/${year}`;
+  } catch {
+    return '-';
+  }
+};
 
     // --- FUNCIONES PARA MANEJO DE MENSAJES ---
   // Mostrar mensaje tipo toast por 2.5 segundos
@@ -72,84 +100,131 @@ const showErrorToast = (msg) => {
 };
 
 
-  // --- FUNCIONES DE NAVEGACIÓN ---
-  // Avanzar al siguiente paso con validación
-  const handleNext = async (e)  => {
+// --- FUNCIONES DE NAVEGACIÓN ---
+
+// Función separada para buscar empleado por social_id
+const fetchEmployeeBySocialId = async (socialId) => {
+  try {
+    const response = await axios.get(`/EmployeeWithSocialId/${socialId}`);
+
+    if (response.status === 202) {
+      const { employee, address } = response.data;
+
+      return {
+        employee,
+        address: Array.isArray(address) && address.length > 0 ? address[0] : null,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error al buscar el empleado:', error);
+    return null;
+  }
+};
+
+// Avanzar al siguiente paso con validación
+const handleNext = async (e) => {
   e.preventDefault();
 
-    // Validar campos del paso actual
-    if (!validateCurrentStep()) {
-      return; // No avanzar si hay errores
-    }
-
-  //buscar una mejor forma de realizar esta validacion para ver si exite el employee
-  if(formData.social_id != '' &&  step === 1){
-    const reqeust = await axios.get(`/EmployeeWithSocialId/${formData.social_id}`).then(response=>{
-      if(response.status == 202){
-        // console.log(response.data);
-
-        console.log(response.data)
-
-        let employee = response.data.employee;
-        let address = response.data.address;
-
-        formData.social_id = employee['social_id'];
-        formData.firstName = employee['name'];
-        formData.lastName = employee['lastname'];
-        formData.dob = employee['birthday'];
-        formData.email = employee['email'];
-        formData.phone = employee['phone_number'];
-        formData.airport = employee['airport'];
-        formData.willingToTravel = employee['avaible_travel'] == 1 ? 'Yes':'No';
-
-        console.log(address);
-        const mapa = address.map(function(item, index, arr){
-          formData.state = item['state'];
-          formData.city = item['city'];
-          formData.street = item['street'];
-          formData.zip = item['zip'];
-
-        });
-        setStep(prev => prev + 6);
-    }
-    });
+  // Validar campos del paso actual
+  if (!validateCurrentStep()) {
+    return; // No avanzar si hay errores
   }
 
-  // Si no entró en el bloque anterior, avanzar normalmente
-  setStep(prev => prev + 1);
+  // Si estamos en el paso 1 y hay un social_id, intentar buscar al empleado
+  if (formData.social_id !== '' && step === 1) {
+    const data = await fetchEmployeeBySocialId(formData.social_id);
+
+    if (data && data.employee) {
+      const { employee, address } = data;
+
+      // Convertir fechas string a objetos Date (o null si no hay fecha)
+      const dob = employee.birthday ? new Date(employee.birthday) : null;
+      const startDate = employee.startDate ? new Date(employee.startDate) : null;
+      const endDate = employee.endDate ? new Date(employee.endDate) : null;
+
+      // Si tienes workHistory, convertir también las fechas
+      const mappedWorkHistory = (employee.workHistory || []).map(job => ({
+        ...job,
+        start: job.start ? new Date(job.start) : null,
+        end: job.end ? new Date(job.end) : null,
+      }));
+
+      setFormData((prevData) => ({
+        ...prevData,
+        social_id: employee.social_id,
+        firstName: employee.name,
+        lastName: employee.lastname,
+        dob,
+        email: employee.email,
+        phone: employee.phone_number,
+        airport: employee.airport,
+        willingToTravel: employee.avaible_travel === 1 ? 'Yes' : 'No',
+        startDate,
+        endDate,
+        state: address?.state || '',
+        city: address?.city || '',
+        street: address?.street || '',
+        zip: address?.zip || '',
+        workHistory: mappedWorkHistory.length > 0 ? mappedWorkHistory : prevData.workHistory
+      }));
+
+      // Saltamos 6 pasos si empleado ya existe
+      setStep((prev) => prev + 6);
+      return;
+    }
+  }
+
+  // Si no se encontró el empleado o no estamos en el paso 1, avanzamos normalmente
+  setStep((prev) => prev + 1);
 };
 
 
 
-function isValidDate(dateString) {
-  // Verifica formato MM/DD/YYYY
+
+function isValidDate(dateInput) {
+  // Si ya es un objeto Date
+  if (dateInput instanceof Date && !isNaN(dateInput)) {
+    return true;
+  }
+
+  // Si es string, verificar formato MM/DD/YYYY
   const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/;
-  if (!regex.test(dateString)) return false;
+  if (!regex.test(dateInput)) return false;
 
-  // Parsear partes
-  const [month, day, year] = dateString.split('/').map(Number);
-
-  // Crear fecha JS (mes - 1 porque JS usa 0-index en meses)
+  const [month, day, year] = dateInput.split('/').map(Number);
   const date = new Date(year, month - 1, day);
 
-  // Verificar que la fecha sea válida (ej. 02/30 no existe)
   return date.getFullYear() === year &&
          date.getMonth() === month - 1 &&
          date.getDate() === day;
 }
 
-function calculateAge(dateString) {
-  const [month, day, year] = dateString.split('/').map(Number);
-  const dob = new Date(year, month - 1, day);
-  const today = new Date();
 
+function calculateAge(dateInput) {
+  let dob;
+
+  if (typeof dateInput === 'string') {
+    const [month, day, year] = dateInput.split('/').map(Number);
+    dob = new Date(year, month - 1, day);
+  } else if (dateInput instanceof Date && !isNaN(dateInput)) {
+    dob = dateInput;
+  } else {
+    return null; // entrada inválida
+  }
+
+  const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
   const m = today.getMonth() - dob.getMonth();
+
   if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
     age--;
   }
+
   return age;
 }
+
 
   // --- VALIDACIONES POR PASO ---
 const validateCurrentStep = () => {
@@ -291,36 +366,40 @@ if (step === 4) {
   }
 
   // Validación de fechas
-  const { startDate, endDate } = formData;
-  const isValidDate = (str) => datePattern.test(str);
 
-  if (startDate && !isValidDate(startDate)) {
-    newErrors.startDate = true;
-    showErrorToast("Start date must be in MM/DD/YYYY format.");
-  }
+const isValidDate = (date) =>
+  date instanceof Date && !isNaN(date.getTime());
 
-  if (endDate && !isValidDate(endDate)) {
-    newErrors.endDate = true;
-    showErrorToast("End date must be in MM/DD/YYYY format.");
-  }
+
+ const { startDate, endDate } = formData;
+
+if (startDate && !isValidDate(startDate)) {
+  newErrors.startDate = true;
+  showErrorToast("Start date is invalid.");
+}
+
+if (endDate && !isValidDate(endDate)) {
+  newErrors.endDate = true;
+  showErrorToast("End date is invalid.");
+}
+
 
   // Validación de rango de fechas (solo si ambas son válidas)
-  if (
-    startDate &&
-    endDate &&
-    isValidDate(startDate) &&
-    isValidDate(endDate)
-  ) {
-    const [sm, sd, sy] = startDate.split('/').map(Number);
-    const [em, ed, ey] = endDate.split('/').map(Number);
-    const start = new Date(sy, sm - 1, sd);
-    const end = new Date(ey, em - 1, ed);
+if (
+  startDate &&
+  endDate &&
+  isValidDate(startDate) &&
+  isValidDate(endDate)
+) {
+  const start = startDate;
+  const end = endDate;
 
-    if (end < start) {
-      newErrors.endDate = true;
-      showErrorToast("End date cannot be before start date.");
-    }
+  if (end < start) {
+    newErrors.endDate = true;
+    showErrorToast("End date cannot be before start date.");
   }
+}
+
 
   if (hasEmptyFields) {
     showErrorToast("Please complete all required fields.");
@@ -367,13 +446,16 @@ if (step === 6) {
   const workValid = formData.workHistory.some((job, i) => {
     const errors = {};
     const isComplete =
-      job.employer.trim() !== '' &&
-      job.phone.trim() !== '' &&
-      job.start.trim() !== '' &&
-      job.end.trim() !== '' &&
-      job.title.trim() !== '' &&
-      job.duties.trim() !== '' &&
-      job.reason.trim() !== '';
+      job.employer?.trim() !== '' &&
+      job.phone?.trim() !== '' &&
+      job.start instanceof Date &&
+      !isNaN(job.start) &&
+      job.end instanceof Date &&
+      !isNaN(job.end) &&
+      job.title?.trim() !== '' &&
+      job.duties?.trim() !== '' &&
+      job.reason?.trim() !== '';
+
 
     // Validación de fechas individuales
     if (job.start && job.end) {
@@ -584,6 +666,45 @@ const handleRemoveFile = (index) => {
   return Object.values(obj).every(value => String(value).trim() === '');
 };
 
+const showSimilarJobsModal = async (jobs, formData) => {
+  await MySwal.fire({
+    title: 'Other Jobs You May Like',
+    html: (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {jobs.map((job) => (
+          <div key={job.id} className="p-4 bg-white rounded shadow">
+            <h3 className="text-red-600 font-bold">{job.name}</h3>
+            <p className="text-sm"><strong>Type:</strong> {job.type}</p>
+            <p className="text-sm mb-2"><strong>Location:</strong> {job.ubication}</p>
+            <button
+              onClick={() => {
+                MySwal.close();
+                MySwal.fire({
+                  title: `Apply for ${job.name}`,
+                  html: <Formulario selectedJob={job} prefilledData={formData} />,
+                  showConfirmButton: false,
+                  showCloseButton: true,
+                  width: "80%",
+                  customClass: {
+                      popup: "overflow-auto max-h-[100vh] p-4 fixed-height-modal",
+                    },
+                });
+              }}
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 mt-2"
+            >
+              Apply with Same Info
+            </button>
+          </div>
+        ))}
+      </div>
+    ),
+    showConfirmButton: false,
+    showCloseButton: true,
+    width: '80%',
+    background: '#f9f9f9',
+  });
+};
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -621,11 +742,32 @@ const handleSubmit = async (e) => {
   }
 
   // ✅ 4. Convertir fechas y normalizar datos
-  const formatDateToMySQL = (dateStr) => {
-    if (!dateStr) return '';
-    const [month, day, year] = dateStr.split('/');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  };
+const formatDateToMySQL = (date) => {
+  if (!date) return null;
+
+  // Si ya es string con formato correcto
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+
+  // Si es string tipo MM/DD/YYYY
+  if (typeof date === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+    const [month, day, year] = date.split('/');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Si es un objeto Date
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  return null; // Si no pasa ninguna validación
+};
+
+
 
   const normalizedData = {
     ...formData,
@@ -683,29 +825,49 @@ const handleSubmit = async (e) => {
   }
 
   // ✅ Envío del formulario
-  try {
-    const response = await axios.post('/createEmployee', formPayload, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+try {
+  const response = await axios.post('/createEmployee', formPayload, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
-    console.log('Cliente registrado:', response.data);
-    MySwal.fire('Success', 'Form submitted successfully!', 'success');
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response data:', error.response.data);
-      if (error.response.data.validator) {
-        const validatorErrors = error.response.data.validator.errors || error.response.data;
-        setErrorMsg(JSON.stringify(validatorErrors, null, 2));
-      } else {
-        setErrorMsg('Error en la validación del formulario.');
+  // Mostrar SweetAlert de éxito
+  await MySwal.fire({
+    icon: 'success',
+    title: 'Form submitted successfully!',
+    text: 'We will contact you soon.',
+    confirmButtonText: 'OK',
+  });
+
+  // Buscar trabajos similares y mostrar modal
+  const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
+  if (types.length > 0) {
+    try {
+      const similarRes = await axios.post('/occupations/similar', { types });
+      const similarJobs = similarRes.data;
+
+      if (similarJobs.length > 0) {
+        await showSimilarJobsModal(similarJobs, formData);
       }
-    } else {
-      console.error('Error general:', error);
-      setErrorMsg("There was a problem submitting the form. Please try again.");
+    } catch (error) {
+      console.error('Error fetching similar jobs:', error);
+      // Opcional: manejar error con setErrorMsg o showErrorToast
     }
   }
+} catch (error) {
+  if (error.response) {
+    console.error('Error response data:', error.response.data);
+    if (error.response.data.validator) {
+      const validatorErrors = error.response.data.validator.errors || error.response.data;
+      setErrorMsg(JSON.stringify(validatorErrors, null, 2));
+    } else {
+      setErrorMsg('Error in the form validation.');
+    }
+  } else {
+    console.error('Error general:', error);
+    setErrorMsg("There was a problem submitting the form. Please try again.");
+  }
+}
 };
-
 
 
 
@@ -770,13 +932,13 @@ const handleSubmit = async (e) => {
   <div className="flex justify-center items-center min-h-[200px]"> {/* Ajusta min-h según el alto deseado */}
     <div className="w-full max-w-xs">
       <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
-        Social ID
+        Driver License
       </label>
       <input
         onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ''))}
         inputMode="numeric"
         name="social_id"
-        placeholder="Social ID"
+        placeholder="Driver License"
         value={formData.social_id}
         onChange={handleChange}
         className={`w-full border rounded px-3 py-2 ${
@@ -866,17 +1028,23 @@ const handleSubmit = async (e) => {
           <div>
             <label className="text-left block text-sm font-medium text-gray-700">Date of Birth</label>
             <div className="flex justify-start">
-            <ReactDatePicker
-              selected={formData.dob ? parse(formData.dob, "MM/dd/yyyy", new Date()) : null}
-              onChange={(date) => {
-                const formatted = date ? format(date, "MM/dd/yyyy") : "";
-                handleChange({ target: { name: "dob", value: formatted } });
-              }}
-              placeholderText="MM/DD/YYYY"
-              dateFormat="MM/dd/yyyy"
-              className={`w-full border rounded px-3 py-2 ${errores.dob ? "border-red-500" : ""}`}
-              dropdownMode="select"
-            />
+<ReactDatePicker
+  selected={
+    formData.dob
+      ? formData.dob instanceof Date
+        ? formData.dob
+        : parse(formData.dob, "MM/dd/yyyy", new Date())
+      : null
+  }
+  onChange={(date) => {
+    handleChange({ target: { name: "dob", value: date } }); // ← guarda como objeto Date directamente
+  }}
+  placeholderText="MM/DD/YYYY"
+  dateFormat="MM/dd/yyyy"
+  className={`w-full border rounded px-3 py-2 ${errores.dob ? "border-red-500" : ""}`}
+  dropdownMode="select"
+/>
+
           </div>
 
             </div>
@@ -996,13 +1164,13 @@ const handleSubmit = async (e) => {
 
       {/* Estado Migratorio */}
 <div className="mt-10 border-t border-gray-300 pt-6 max-w-4xl mx-auto">
-  <h2 className="text-2xl font-bold mb-4 text-center">Immigration Status</h2>
+  <h2 className="text-2xl font-bold mb-4 text-center">Residence Status</h2>
 
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {/* Current Immigration Status */}
     <div>
       <label className="text-left block text-sm font-medium text-gray-700">
-        Current Immigration Status
+        Residence Status
       </label>
       <select
         name="immigrationStatus"
@@ -1106,16 +1274,15 @@ const handleSubmit = async (e) => {
 <div>
   <label className="block text-left font-semibold mb-1">- Start Date</label>
   <div className="flex justify-start">
-    <ReactDatePicker
-      selected={formData.startDate ? parse(formData.startDate, "MM/dd/yyyy", new Date()) : null}
-      onChange={(date) => {
-        const formatted = date ? format(date, "MM/dd/yyyy") : "";
-        handleChange({ target: { name: "startDate", value: formatted } });
-      }}
-      placeholderText="MM/DD/YYYY"
-      dateFormat="MM/dd/yyyy"
-      className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.startDate ? "border-red-500" : ""}`}
-    />
+<ReactDatePicker
+  selected={formData.startDate || null}  // aquí un objeto Date o null
+  onChange={(date) => {
+    handleChange({ target: { name: "startDate", value: date } });  // guardar Date directamente
+  }}
+  placeholderText="MM/DD/YYYY"
+  dateFormat="MM/dd/yyyy"
+  className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.startDate ? "border-red-500" : ""}`}
+/>
   </div>
 </div>
 
@@ -1123,16 +1290,15 @@ const handleSubmit = async (e) => {
 <div>
   <label className="block text-left font-semibold mb-1">- End Date</label>
   <div className="flex justify-start">
-    <ReactDatePicker
-      selected={formData.endDate ? parse(formData.endDate, "MM/dd/yyyy", new Date()) : null}
-      onChange={(date) => {
-        const formatted = date ? format(date, "MM/dd/yyyy") : "";
-        handleChange({ target: { name: "endDate", value: formatted } });
-      }}
-      placeholderText="MM/DD/YYYY"
-      dateFormat="MM/dd/yyyy"
-      className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.endDate ? "border-red-500" : ""}`}
-    />
+<ReactDatePicker
+  selected={formData.endDate || null}
+  onChange={(date) => {
+    handleChange({ target: { name: "endDate", value: date } });
+  }}
+  placeholderText="MM/DD/YYYY"
+  dateFormat="MM/dd/yyyy"
+  className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.endDate ? "border-red-500" : ""}`}
+/>
   </div>
   </div>
 </div>
@@ -1272,16 +1438,15 @@ const handleSubmit = async (e) => {
               <div className="flex justify-start">
 
 
-            <ReactDatePicker
-              selected={job.start ? parse(job.start, 'MM/dd/yyyy', new Date()) : null}
-              onChange={(date) => {
-                const formattedDate = date ? format(date, 'MM/dd/yyyy') : '';
-                handleWorkChange(i, 'start', formattedDate);
-              }}
-              dateFormat="MM/dd/yyyy"
-              placeholderText="MM/DD/YYYY"
-              className={`w-full border rounded px-3 py-2`}
-            />
+<ReactDatePicker
+  selected={job.start || null}
+  onChange={(date) => {
+    handleWorkChange(i, 'start', date);
+  }}
+  dateFormat="MM/dd/yyyy"
+  placeholderText="MM/DD/YYYY"
+  className={`w-full border rounded px-3 py-2`}
+/>
           </div>
               </div>
 
@@ -1289,16 +1454,15 @@ const handleSubmit = async (e) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 text-left">End Date</label>
               <div className="flex justify-start">
-            <ReactDatePicker
-              selected={job.end ? parse(job.end, 'MM/dd/yyyy', new Date()) : null}
-              onChange={(date) => {
-                const formattedDate = date ? format(date, 'MM/dd/yyyy') : '';
-                handleWorkChange(i, 'end', formattedDate);
-              }}
-              dateFormat="MM/dd/yyyy"
-              placeholderText="MM/DD/YYYY"
-              className={`w-full border rounded px-3 py-2`}
-            />
+<ReactDatePicker
+  selected={job.end || null}
+  onChange={(date) => {
+    handleWorkChange(i, 'end', date);
+  }}
+  dateFormat="MM/dd/yyyy"
+  placeholderText="MM/DD/YYYY"
+  className={`w-full border rounded px-3 py-2`}
+/>
           </div>
 
 
@@ -1373,10 +1537,9 @@ const handleSubmit = async (e) => {
       {step === 8 && (
         <div className="space-y-6 text-gray-800">
           <section>
-            <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Job</h3>
+            <p className="font-bold text-lg mb-2 border-b pb-1 text-center"><strong>Job:</strong> {job.name}</p>
               {job && typeof job === 'object' ? (
                 <>
-                  <p><strong>Name:</strong> {job.name}</p>
                   <p><strong>Type:</strong> {job.type}</p>
                   <p><strong>Location:</strong> {job.ubication}</p>
                   <p><strong>Description:</strong> {job.description}</p>
@@ -1384,7 +1547,7 @@ const handleSubmit = async (e) => {
               ) : (
                 <p>{job || 'No seleccionado'}</p>
               )}
-            <h4 className="font-semibold mt-2 text-center">Uploaded PDFs:</h4>
+            <h4 className="font-semibold mt-2 text-center">Curriculum PDF Uploaded:</h4>
             {files.length > 0 ? (
               <ul className="list-disc list-inside">
                 {files.map((file, i) => (
@@ -1392,7 +1555,7 @@ const handleSubmit = async (e) => {
                 ))}
               </ul>
             ) : (
-              <p>No hay archivos subidos.</p>
+              <p>No files have been uploaded.</p>
             )}
           </section>
 
@@ -1400,8 +1563,8 @@ const handleSubmit = async (e) => {
             <h3 className="font-bold text-lg mb-2 border-b pb-1 text-center">Personal Information</h3>
             <p className='text-left'><strong>First Name:</strong> {formData.firstName || '-'}</p>
             <p className='text-left'><strong>Last Name:</strong> {formData.lastName || '-'}</p>
-            <p className='text-left'><strong>Social ID:</strong> {formData.social_id || '-'}</p>
-            <p className='text-left'><strong>Date of Birth:</strong> {formData.dob || '-'}</p>
+            <p className='text-left'><strong>Driver License:</strong> {formData.social_id || '-'}</p>
+            <p className='text-left'><strong>Date of Birth:</strong> {formatDate(formData.dob)}</p>
             <p className='text-left'><strong>Street:</strong> {formData.street || '-'}</p>
             <p className='text-left'><strong>City:</strong> {formData.city || '-'}</p>
             <p className='text-left'><strong>State:</strong> {formData.state || '-'}</p>
@@ -1409,10 +1572,8 @@ const handleSubmit = async (e) => {
             <p className='text-left'><strong>Email:</strong> {formData.email || '-'}</p>
             <p className='text-left'><strong>Phone:</strong> {formData.phone || '-'}</p>
             <p className='text-left'><strong>willingToTravel:</strong> {formData.willingToTravel || '-'}</p>
-            <p className='text-left'><strong>Immigration Status:</strong> {formData.immigrationStatus || '-'}</p>
-            <p className='text-left'><strong>Visa / Permit Expiry Date:</strong> {formData.visaExpiryDate || '-'}</p>
-            <p className='text-left'><strong>Authorized to Work:</strong> {formData.workAuthorization ? 'Yes' : 'No'}</p>
-            <p className='text-left'><strong>Country of Origin:</strong> {formData.countryOfOrigin || '-'}</p>
+            <p className='text-left'><strong>Residence Status</strong> {formData.immigrationStatus || '-'}</p>
+            
 
           </section>
 
@@ -1422,8 +1583,8 @@ const handleSubmit = async (e) => {
             <p className='text-left'><strong>Branch:</strong> {formData.branch || '-'}</p>
             <p className='text-left'><strong>Departing Airport:</strong> {formData.airport || '-'}</p>
             <p className='text-left'><strong>Date Available:</strong></p>
-            <p className='text-left'><strong>Date Start:</strong> {formData.startDate || '-'}</p>
-            <p className='text-left'><strong>Date End:</strong> {formData.endDate || '-'}</p>
+            <p className='text-left'><strong>Date Start:</strong> {formatDate(formData.startDate)}</p>
+            <p className='text-left'><strong>Date End:</strong> {formatDate(formData.endDate)}</p>
           </section>
 
           <section>
@@ -1444,8 +1605,8 @@ const handleSubmit = async (e) => {
               <div key={i} className="mb-4  text-left">
                 <p><strong>Employer:</strong> {jobHist.employer || '-'}</p>
                 <p><strong>Phone:</strong> {jobHist.phone || '-'}</p>
-                <p><strong>Start Date:</strong> {jobHist.start || '-'}</p>
-                <p><strong>End Date:</strong> {jobHist.end || '-'}</p>
+                <p><strong>Start Date:</strong> {formatDate(jobHist.start)}</p>
+                <p><strong>End Date:</strong> {formatDate(jobHist.end)}</p>
                 <p><strong>Title:</strong> {jobHist.title || '-'}</p>
                 <p><strong>Duties:</strong> {jobHist.duties || '-'}</p>
                 <p><strong>Reason for Leaving:</strong> {jobHist.reason || '-'}</p>
@@ -1466,94 +1627,113 @@ const handleSubmit = async (e) => {
 
         {/* Paso 8 - contrato */}
         {step === 9 && (
-  <div className="flex flex-col gap-8">
-    {/* CONTRACT SECTION */}
-    <div className="text-center">
-      <h2 className="font-bold text-lg mb-2">📄 Employee Worksheet Upload</h2>
-      <p className="mb-4">
-        <strong>PLEASE DOWNLOAD</strong><br />
-        For a more effective assignment process for your job application, kindly download this document, complete the contract information, and then re-upload it to this section.
-      </p>
+          <div className="flex flex-col gap-8">
+            {/* CONTRACT SECTION */}
+            <div className="text-center">
+              <h2 className="font-bold text-lg mb-2">📄 Employee Worksheet Upload</h2>
+              <p className="mb-4">
+                <strong>PLEASE DOWNLOAD</strong><br />
+                For a more effective assignment process for your job application, kindly download this document, complete the contract information, and then re-upload it to this section.
+              </p>
 
-      {/* Download + Re-upload */}
-      <div className="flex justify-center gap-4 mb-6">
-        <a
-          href="/files/Employee_Worksheet.docx"
-          download
-          className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition shadow"
-        >
-          Download Contract
-        </a>
+              {/* Download + Re-upload */}
+              <div className="flex justify-center gap-4 mb-6">
+                <a
+                  href="/files/Employee_Worksheet.docx"
+                  download
+                  className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition shadow"
+                >
+                  Download Contract
+                </a>
 
-        <label className="bg-gray-100 text-gray-800 px-5 py-2 rounded-md cursor-pointer border border-gray-300 hover:bg-gray-200 transition shadow">
-          Re-upload Contract
-          <input
-            type="file"
-            accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={(e) => handleFileChange(e, 'contract')}
-            className="hidden"
-          />
-        </label>
-      </div>
+                <label className="bg-gray-100 text-gray-800 px-5 py-2 rounded-md cursor-pointer border border-gray-300 hover:bg-gray-200 transition shadow">
+                  Re-upload Contract
+                  <input
+                    type="file"
+                    accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => handleFileChange(e, 'contract')}
+                    className="hidden"
+                  />
+                </label>
+              </div>
 
-
-
-      {/* Show uploaded contract file */}
-      {formData.contractFile && (
-        <div className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate">
-          <span className="truncate">{formData.contractFile.name}</span>
-          <button
-            type="button"
-            onClick={handleRemoveContractFile}
-            className="ml-2 text-red-600 hover:text-red-800 font-bold"
-          >
-            ×
-          </button>
-        </div>
-      )}
-    </div>
-
-    {/* CERTIFICATIONS SECTION */}
-    <div>
-      <h2 className="font-bold text-lg mb-2">📎 Certifications (Optional)</h2>
-      <p className="mb-2">
-        You may upload any certificates that strengthen your work experience in this section. This is optional, and not having one will not affect the personnel selection process.
-      </p>
-
-      <input
-        type="file"
-        accept="application/pdf"
-        multiple
-        onChange={(e) => handleFileChange(e, 'certifications')}
-        className="block mb-4 w-full"
-      />
-
-      {/* Show uploaded certification files */}
-      {formData.certifications.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {formData.certifications.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
-            >
-              <span className="truncate">{file.name}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveCertFile(index)}
-                className="ml-2 text-red-600 hover:text-red-800 font-bold"
-              >
-                ×
-              </button>
+              {/* Show uploaded contract file */}
+              {formData.contractFile && (
+                <div className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate">
+                  <span className="truncate">{formData.contractFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveContractFile}
+                    className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-)}
+
+            {/* CERTIFICATIONS SECTION */}
+            <div>
+              <h2 className="font-bold text-lg mb-2">📎 Certifications (Optional)</h2>
+              <p className="mb-2">
+                You may upload any certificates that strengthen your work experience in this section. This is optional, and not having one will not affect the personnel selection process.
+              </p>
+
+              <label className="block mb-4 w-full text-center">
+                <span className="text-sm block mb-2 font-medium">
+                  Upload Certifications (PDF only)
+                </span>
+
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('certificationsInput').click()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
+                    Choose Files
+                  </button>
+
+                  <span className="text-gray-600 text-sm">
+                    {formData.certifications && formData.certifications.length > 0
+                      ? `${formData.certifications.length} file(s) selected`
+                      : 'No files selected'}
+                  </span>
+                </div>
+
+                <input
+                  id="certificationsInput"
+                  type="file"
+                  accept="application/pdf"
+                  multiple
+                  onChange={(e) => handleFileChange(e, 'certifications')}
+                  className="hidden"
+                />
+              </label>
 
 
-
+              {/* Show uploaded certification files */}
+              {formData.certifications.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.certifications.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
+                    >
+                      <span className="truncate">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCertFile(index)}
+                        className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
     </form>
       <div className="flex justify-between pt-6">
         {step > 0 && (

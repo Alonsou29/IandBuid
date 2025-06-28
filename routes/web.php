@@ -35,8 +35,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
     Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
     Route::put('/updateOccupation/{id}',[OccupationController::class, 'updateOccupation']);
+    
 });
 
+Route::post('/occupations/similar', [OccupationController::class, 'similarJobs']);
 
 Route::get('/postu/{id}',[OccupationController::class, 'postulation']);
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
