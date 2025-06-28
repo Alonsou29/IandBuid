@@ -265,6 +265,12 @@ if (step === 2) {
     }
   }
 
+      // ✅ 1. Validación: contrato obligatorio
+  if (!formData.resume) {
+    showErrorToast("Please upload the resume.");
+    return;
+  }
+
   // Certifications
   if (formData.certifications) {
     if (formData.certifications.length > 7) {
@@ -655,6 +661,13 @@ const showSimilarJobsModal = async (jobs, formData) => {
 const handleSubmit = async (e) => {
   e.preventDefault();
   setIsSubmitting(true); // ✅ Mostrar spinner
+
+
+    // ✅ 1. Validación: contrato obligatorio
+  if (!formData.resume) {
+    showErrorToast("Please upload the resume.");
+    return;
+  }
 
   // ✅ 2. Validación: tamaño máximo del resume
   if (formData.resume) {
