@@ -180,12 +180,20 @@ class EmployeeController extends Controller
                 ]);
             }
 
+            if($request->hasFile('driverLicenseImage')){
+                $imageDL = $request->file('driverLicenseImage');
+                $image_path = $imageDL->storeAs('driverLicenses', $request->social_id."_".time().".".$imageDL->extension(), $this->disk);
+
+                $employee->documents()->create([
+                    'type' => 'license',
+                    'url' => $image_path
+                ]);
+            }
 
             return response()->json(['msg'=>$employee, 'certifications'=>$request->certifications], 201);
         }catch(ValidationException $e){
             return response()->json([$e],400);
         }
-
     }
 
     public function updateEmployee(Request $request, $socialId){
@@ -210,7 +218,7 @@ class EmployeeController extends Controller
 
             $doc = $employee->documents()->where('type',$type)->get();
 
-            if($type == 'contract' || $type == 'resume'){
+            if($type == 'contract' || $type == 'resume' || $type == 'license'){
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
                         if (ob_get_level()){

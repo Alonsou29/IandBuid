@@ -69,6 +69,7 @@ export default function Formulario({ selectedJob, prefilledData = null }) {
         certifications: [],
         contractFile: null,
         resume: null,
+        driverLicenseImage: null,
         occupation_id: selectedJob?.id || '',
       };
     }
@@ -781,6 +782,10 @@ Object.entries(normalizedData).forEach(([key, value]) => {
     formPayload.append('contractFile', formData.contractFile);
   }
 
+  if (formData.driverLicenseImage){
+    formPayload.append('driverLicenseImage', formData.driverLicenseImage);
+  }
+
   // ✅ Debug opcional
   for (const pair of formPayload.entries()) {
     console.log(`${pair[0]}:`, pair[1]);
@@ -796,25 +801,31 @@ try {
   await MySwal.fire({
     icon: 'success',
     title: 'Form submitted successfully!',
-    text: 'We will contact you soon.',
-    confirmButtonText: 'OK',
+    text: 'We will contact you soon. \n\nWould you like to apply for other occupations?',
+    confirmButtonText: 'Yes',
+    showDenyButton: true,
+    denyButtonText: 'No'
+  }).then(async (value)=>{
+    if(value.isConfirmed){
+        // Buscar trabajos similares y mostrar modal
+        const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
+        if (types.length > 0) {
+            try {
+            const similarRes = await axios.post('/occupations/similar', { types });
+            const similarJobs = similarRes.data;
+
+            if (similarJobs.length > 0) {
+                await showSimilarJobsModal(similarJobs, formData);
+            }
+            } catch (error) {
+            console.error('Error fetching similar jobs:', error);
+            // Opcional: manejar error con setErrorMsg o showErrorToast
+            }
+        }
+    }
   });
 
-  // Buscar trabajos similares y mostrar modal
-  const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
-  if (types.length > 0) {
-    try {
-      const similarRes = await axios.post('/occupations/similar', { types });
-      const similarJobs = similarRes.data;
 
-      if (similarJobs.length > 0) {
-        await showSimilarJobsModal(similarJobs, formData);
-      }
-    } catch (error) {
-      console.error('Error fetching similar jobs:', error);
-      // Opcional: manejar error con setErrorMsg o showErrorToast
-    }
-  }
 } catch (error) {
   if (error.response) {
     console.error('Error response data:', error.response.data);
@@ -1007,8 +1018,8 @@ try {
         </div>
 
       )}
-        
-        
+
+
 
       {/* Paso 3 - Personal Information */}
       {step === 3 && (
@@ -1563,7 +1574,7 @@ try {
             <p className='text-left'><strong>Phone:</strong> {formData.phone || '-'}</p>
             <p className='text-left'><strong>willingToTravel:</strong> {formData.willingToTravel || '-'}</p>
             <p className='text-left'><strong>Residence Status</strong> {formData.immigrationStatus || '-'}</p>
-            
+
 
           </section>
 
