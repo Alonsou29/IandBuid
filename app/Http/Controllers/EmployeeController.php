@@ -112,7 +112,7 @@ class EmployeeController extends Controller
                 'zip'=>$request->zip
             ]);
 
-                // Decodificar referencias JSON
+            // Decodificar referencias JSON
             $ref = json_decode($request->references, true);
             if (is_array($ref)) {
                 foreach ($ref as $person) {
@@ -157,7 +157,7 @@ class EmployeeController extends Controller
                 ]);
             }
 
-                        // Guardar certificaciones si vienen archivos
+            // Guardar certificaciones si vienen archivos
             if ($request->hasFile('certifications')) {
                 foreach ($request->file('certifications') as $certFile) {
                     $numberCtf = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
@@ -218,6 +218,8 @@ class EmployeeController extends Controller
 
             $doc = $employee->documents()->where('type',$type)->get();
 
+            dd($doc);
+
             if($type == 'contract' || $type == 'resume' || $type == 'license'){
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
@@ -231,7 +233,7 @@ class EmployeeController extends Controller
                         // return response()->donwload("app/public/",basename($document->url),$headers);
                         return Storage::disk($this->disk)->download($document->url);
                     }else{
-                        return response()->json(['msg'=>'no upload file this employee']);
+                        return response()->json(['msg'=>'no upload file this employee'], 210);
                     }
                 }
             }else{
@@ -243,28 +245,22 @@ class EmployeeController extends Controller
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
                         array_push($filesCompress, $document->url);
-                    }else{
-                        return response()->json(['msg'=>'no upload files this employee']);
                     }
                 }
 
-                if($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true){
+                if($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true && $filesCompress != []){
                     foreach($filesCompress as $filePath){
                         if(Storage::disk($this->disk)->exists($filePath)){
                             $fileBody = Storage::disk($this->disk)->get($filePath);
                             $zip->addFromString(basename($filePath), $fileBody);
-                        }else{
-
                         }
-
                     }
+                    $zip->close();
+                    return response()->download($tempPath, $filesCompressName)->deleteFileAfterSend(true);
+                }else{
+                    return response()->json(['msg'=> 'no file zip'],210);
                 }
-                $zip->close();
-                return response()->download($tempPath, $filesCompressName)->deleteFileAfterSend(true);
             }
-
-
-            return response()->json([$doc, 'msg'=>$type]);
         }catch(ValidationException $e){
             return response()->json(['msg'=> $e]);
         }
