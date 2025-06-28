@@ -123,11 +123,11 @@ class OccupationController extends Controller
     }
 
     $jobs = Occupation::where('isDelete', false)
-        ->where(function ($query) use ($types) {
-            foreach ($types as $type) {
-                $query->orWhereRaw("FIND_IN_SET(?, REPLACE(type, ' ', '')) > 0", [trim($type)]);
-            }
-        })
+        // ->where(function ($query) use ($types) {
+        //     foreach ($types as $type) {
+        //         $query->orWhereRaw("FIND_IN_SET(?, REPLACE(type, ' ', '')) > 0", [trim($type)]);
+        //     }
+        // })
         ->get();
 
     return response()->json($jobs, 200);
