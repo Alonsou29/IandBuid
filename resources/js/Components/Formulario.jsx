@@ -74,7 +74,7 @@ const [isExistingEmployee, setIsExistingEmployee] = useState(false);
         certifications: [],
         contractFile: null,
         resume: null,
-        existingResumeUrl: '', 
+        existingResumeUrl: '',
         driverLicenseImage: null,
         occupation_id: selectedJob?.id || '',
         hasExistingResume: false, //
@@ -222,7 +222,7 @@ console.log('📝 Resume antes de guardar en formData:', resume);
         existingResumeUrl: resume || '', // <-- guardar URL o path del resume
         hasExistingResume: !!resume,
         driverLicenseImage: null,
-        useExistingResume: true, 
+        useExistingResume: true,
         occupation_id: selectedJob?.id || prevData.occupation_id || '',
       }));
 
@@ -1098,7 +1098,7 @@ if (formData.resume instanceof File) {
 {step === 2 && (
   <div className="flex flex-col items-center justify-center min-h-[290px]">
     <p className="mb-3 text-center max-w-xl">
-      <strong>Got a resume?</strong> You can upload it in Word or PDF format and we'll use the information to pre-fill your application, saving you time! If you'd rather not upload one, just click <strong>'Next'</strong>.
+      <strong>Got a resume?</strong> Please upload your resume to continue with the registration. <strong>'Next'</strong>.
     </p>
     <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
     <div className="flex flex-col items-center gap-2 mt-10 max-w-md w-full">
