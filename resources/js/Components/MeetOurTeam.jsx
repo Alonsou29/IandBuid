@@ -6,18 +6,10 @@ import 'slick-carousel/slick/slick-theme.css';
 const teamMembers = [
   {
     name: 'Carlos Esteban',
-    title: 'President & CEO',
+    title: 'President',
     description: `With 14 years in the construction industry and 12 years as a welding supervisor, Carlos has cultivated a successful career leading large-scale commercial projects. Six years ago, he founded I&C Builders, starting out by subcontracting and gradually growing into an independent powerhouse in the industry. One of his most notable accomplishments was completing work on 150 churches in New Orleans in less than eight months, a testament to his project management skills and efficiency. In addition to his construction ventures, Carlos has owned a car dealership for the past nine years and recently expanded into healthcare with the launch of a new infusion clinic this year. His commitment to the community is evident, as he played a key role in helping with recovery efforts in Houma after Hurricane Ida. Bilingual and a seasoned leader, Carlos, excels in managing teams, client relations, and project coordination. Outside of work, he enjoys golfing and traveling, balancing his entrepreneurial success with his passion for exploration. His leadership continues to drive the growth and success of our company. `,
     phone: '985-855-8424',
     image: '/TEAM/t1.jpg',
-  },
-  {
-    name: 'Adam Porche',
-    title: 'CEO & President',
-    description: `Adam has been a respected leader in the construction industry for over 25 years. Starting his own company in 2005, Adam built a reputation for delivering high-quality construction solutions rooted in trust, reliability, and a client-centered approach. Over the years, his company has grown into a dynamic force in the construction industry, handling projects that range from complex commercial builds to large-scale renovations. In 2020, Adam partnered with Carlos, combining their expertise and vision to expand the company’s reach and capabilities. Together, they have led the company into new and innovative areas, including the recent launch of a health clinic in Lafayette. This venture reflects Adam’s commitment to giving back to the community and creating spaces that foster well-being and growth. Adam’s work ethic and passion for construction are matched only by his dedication to his family and community. He and his wife are the proud parents of four children, with whom he spends as much time as possible outside of work. A former wrestler himself, Adam has coached wrestling, guiding young athletes with the same principles of discipline, resilience, and teamwork that have driven his success in business. His role as a coach allowed him to give back in a meaningful way, helping the next generation develop skills and confidence both on and off the mat. With a strong commitment to quality, a collaborative approach, and an unwavering focus on client satisfaction, Adam continues to lead his company with a vision for excellence and a passion for making a positive impact in the communities they serve. `,
-    email: 'Adam@iandcbuilders.com',
-    phone: '337-296-7835',
-    image: '/TEAM/t2.jpg',
   },
   {
     name: 'Carlos Toca',
@@ -26,14 +18,6 @@ const teamMembers = [
     email: 'carlos.toca@iandcbuilders.com',
     phone: '337-335-8353',
     image: '/TEAM/t3.jpg',
-  },
-  {
-    name: 'Michael Lopez',
-    title: 'Director of Sales and Operations',
-    description: `With eight years of sales experience across the oil and gas industry and construction staffing, Michael has a proven track record of success in both fields. In his role within construction staffing, he supplied jobs to over 2,500 tradesmen, ensuring that key projects had the skilled labor they needed to succeed. In the oil and gas sector, Michael managed major accounts for operators in the Gulf of Mexico, coordinating critical operations like firefighting and life-saving inspections, while sending technicians into the field. In his spare time, he enjoys fishing and spending quality time with his wife and two kids. A passionate sports fan, Michael also loves cheering on LSU and Saints football. His dedication, expertise, and leadership make him a key member of our sales team. `,
-    email: 'michael@iandcbuilders.com',
-    phone: '337-412-7889',
-    image: '/TEAM/t4.jpg',
   },
     {
     name: 'Katie Peltier',

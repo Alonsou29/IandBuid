@@ -27,7 +27,7 @@ export default function TablaEmployee({ employees }) {
       const { employee, address, reference, workHistory } = res.data;
 
       const military = [{
-        branch: employee.branch || 'N/A',
+        military_desc: employee.military_desc || 'N/A', // ✅ CORRECTO
         start_services: employee.start_services || 'N/A',
         end_services: employee.end_services || 'N/A',
       }];
@@ -55,6 +55,9 @@ export default function TablaEmployee({ employees }) {
             <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
               Download Driver License
             </a>
+                <a href="/download/${employee.social_id}/contract" target="_blank" class="bg-purple-600 text-white px-3 py-1 rounded text-sm">
+      Download Contract
+    </a>
           </div>
         `,
 

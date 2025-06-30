@@ -123,7 +123,7 @@ export default function Welcome() {
       </section>
 
       {/* Sección SERVICES */}
-      <section id="services" className="w-full px-6 py-12 bg-gray-100">
+      <section id="services" className="scroll-mt-16 w-full px-6 py-12 bg-gray-100">
         <h2 className="text-black text-4xl font-bold text-center mb-12 font-spartan">
           SERVICES
         </h2>
@@ -183,7 +183,7 @@ export default function Welcome() {
       </section>
 
       {/* Sección PORTFOLIO */}
-      <section id="portfolio" className="bg-white py-12 px-6 sm:px-10">
+      <section id="portfolio" className="scroll-mt-16 bg-white py-12 px-6 sm:px-10">
         <h2 className="text-black text-4xl font-bold text-center mb-8 font-spartan">
           PORTFOLIO
         </h2>
@@ -239,7 +239,7 @@ export default function Welcome() {
       </section>
 
       {/* Sección JOIN */}
-      <section id="join" className="bg-gray-100 py-12 px-6 sm:px-10">
+      <section id="join" className="scroll-mt-16 bg-gray-100 py-12 px-6 sm:px-10">
         <h2 className="text-black text-4xl font-bold text-center mb-8 font-spartan">
           JOIN OUR TEAM AT I & C BUILDERS!
         </h2>

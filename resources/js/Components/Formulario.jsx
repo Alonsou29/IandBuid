@@ -26,6 +26,7 @@ const steps = [
 export default function Formulario({ selectedJob, prefilledData = null }) {
 const [successToastMessage, setSuccessToastMessage] = useState(null);
 const [errorToastMessage, setErrorToastMessage] = useState(null);
+const [isExistingEmployee, setIsExistingEmployee] = useState(false);
   const [errores, setErrores] = useState({});
   const [certFiles, setCertFiles] = useState([]);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -40,6 +41,7 @@ const [errorToastMessage, setErrorToastMessage] = useState(null);
       return {
         ...prefilledData,
         occupation_id: selectedJob?.id || prefilledData.occupation_id || '',
+        hasExistingResume: false, // <-- aquí agregas esto
       };
     } else {
       return {
@@ -72,11 +74,23 @@ const [errorToastMessage, setErrorToastMessage] = useState(null);
         certifications: [],
         contractFile: null,
         resume: null,
+        existingResumeUrl: '', 
         driverLicenseImage: null,
         occupation_id: selectedJob?.id || '',
+        hasExistingResume: false, //
+         useExistingResume: false,
       };
     }
   });
+
+  const extractFilename = (url) => {
+  try {
+    return decodeURIComponent(url.split('/').pop());
+  } catch {
+    return 'Resume';
+  }
+};
+
 
 const formatDate = (value) => {
   if (!value) return '-'; // Si está vacío, null o undefined
@@ -123,11 +137,14 @@ const fetchEmployeeBySocialId = async (socialId) => {
     const response = await axios.get(`/EmployeeWithSocialId/${socialId}`);
 
     if (response.status === 202) {
-      const { employee, address } = response.data;
+      const { employee, address, reference, workHistory, resume } = response.data;
 
       return {
         employee,
         address: Array.isArray(address) && address.length > 0 ? address[0] : null,
+        reference: Array.isArray(reference) ? reference : [],
+        workHistory: Array.isArray(workHistory) ? workHistory : [],
+        resume: resume || null,
       };
     }
 
@@ -138,60 +155,86 @@ const fetchEmployeeBySocialId = async (socialId) => {
   }
 };
 
-// Avanzar al siguiente paso con validación
+
 const handleNext = async (e) => {
   e.preventDefault();
 
-  // Validar campos del paso actual
-  if (!validateCurrentStep()) {
-    return; // No avanzar si hay errores
-  }
-
-  // Si estamos en el paso 1 y hay un social_id, intentar buscar al empleado
   if (formData.social_id !== '' && step === 1) {
     const data = await fetchEmployeeBySocialId(formData.social_id);
 
-    if (data && data.employee) {
-      const { employee, address } = data;
+if (data && data.employee) {
+  setIsExistingEmployee(true); // ✅ ESTO FALTABA
+  const { employee, address, reference, workHistory, resume } = data;
+  // resto del código...
 
-      // Convertir fechas string a objetos Date (o null si no hay fecha)
+      console.log('📦 Datos desestructurados:', { resume });
+
       const dob = employee.birthday ? new Date(employee.birthday) : null;
-      const startDate = employee.startDate ? new Date(employee.startDate) : null;
-      const endDate = employee.endDate ? new Date(employee.endDate) : null;
+      const startDate = employee.start_services ? new Date(employee.start_services) : null;
+      const endDate = employee.end_services ? new Date(employee.end_services) : null;
 
-      // Si tienes workHistory, convertir también las fechas
-      const mappedWorkHistory = (employee.workHistory || []).map(job => ({
-        ...job,
-        start: job.start ? new Date(job.start) : null,
-        end: job.end ? new Date(job.end) : null,
-      }));
+      const mappedWorkHistory = Array.isArray(workHistory)
+        ? workHistory.map(job => ({
+          employer: job.emplo_name || '',
+          phone: job.phone_number || '',
+          start: job.start_work ? new Date(job.start_work) : null,
+          end: job.end_work ? new Date(job.end_work) : null,
+          title: job.title || '',
+          duties: job.duties || '',
+          reason: job.reason_leaving || '',
+        }))
+        : [];
 
+      const mappedReferences = Array.isArray(reference)
+        ? reference.map(ref => ({
+          name: ref.fullname || '',
+          phone: ref.phone_number || '',
+          email: ref.email || '',
+        }))
+        : [];
+console.log(data)
+console.log('📝 Resume antes de guardar en formData:', resume);
       setFormData((prevData) => ({
         ...prevData,
-        social_id: employee.social_id,
-        firstName: employee.name,
-        lastName: employee.lastname,
+        social_id: employee.social_id || prevData.social_id,
+        firstName: employee.name || '',
+        lastName: employee.lastname || '',
         dob,
-        email: employee.email,
-        phone: employee.phone_number,
-        airport: employee.airport,
+        email: employee.email || '',
+        phone: employee.phone_number || '',
+        airport: employee.airport || '',
         willingToTravel: employee.avaible_travel === 1 ? 'Yes' : 'No',
+        immigrationStatus: employee.status || '',
+        otherImmigrationStatus: '',
+        dfac: employee.military_services ? 'Yes' : 'No',
+        branch: employee.military_desc || '',
         startDate,
         endDate,
-        state: address?.state || '',
-        city: address?.city || '',
         street: address?.street || '',
+        city: address?.city || '',
+        state: address?.state || '',
         zip: address?.zip || '',
-        workHistory: mappedWorkHistory.length > 0 ? mappedWorkHistory : prevData.workHistory
+        workHistory: mappedWorkHistory.length > 0 ? mappedWorkHistory : prevData.workHistory,
+        references: mappedReferences.length > 0 ? mappedReferences : prevData.references,
+        certifications: prevData.certifications || [],
+        contractFile: null,
+        resume: null, // <-- dejar en null porque no tienes el archivo real
+        existingResumeUrl: resume || '', // <-- guardar URL o path del resume
+        hasExistingResume: !!resume,
+        driverLicenseImage: null,
+        useExistingResume: true, 
+        occupation_id: selectedJob?.id || prevData.occupation_id || '',
       }));
 
-      // Saltamos 6 pasos si empleado ya existe
       setStep((prev) => prev + 6);
       return;
     }
   }
 
-  // Si no se encontró el empleado o no estamos en el paso 1, avanzamos normalmente
+  if (!validateCurrentStep()) {
+    return;
+  }
+
   setStep((prev) => prev + 1);
 };
 
@@ -268,8 +311,14 @@ const validateCurrentStep = () => {
 
 
 if (step === 2) {
+    console.log("🧠 isExistingEmployee:", isExistingEmployee); // debug
   const newErrors = {};
   const maxFileSize = 3 * 1024 * 1024;
+
+  if (!isExistingEmployee && !formData.resume) {
+    showErrorToast("Please upload the resume.");
+    return false;
+  }
 
   // Resume
   if (formData.resume) {
@@ -280,11 +329,6 @@ if (step === 2) {
     }
   }
 
-      // ✅ 1. Validación: contrato obligatorio
-  if (!formData.resume) {
-    showErrorToast("Please upload the resume.");
-    return;
-  }
 
   // Certifications
   if (formData.certifications) {
@@ -655,10 +699,13 @@ const showSimilarJobsModal = async (jobs, formData, showSuccessToast, showErrorT
 
           try {
             const res = await axios.get(`/employeeRelation/${formData.social_id}/${jobId}`);
-            console.log("Application successful:", response.data);
+            console.log("Application successful:", res.data);
+
             showSuccessToast(res.data.msg || `You have successfully applied for ${jobName}`);
+
             btn.disabled = true;
             btn.textContent = 'Applied';
+            btn.classList.remove('bg-red-500', 'hover:bg-red-600');
             btn.classList.add('bg-gray-400', 'cursor-not-allowed');
           } catch (error) {
             console.error("Error applying:", error);
@@ -672,72 +719,137 @@ const showSimilarJobsModal = async (jobs, formData, showSuccessToast, showErrorT
 
 
 
-
 const handleSubmit = async (e) => {
   e.preventDefault();
-  setIsSubmitting(true); // ✅ Mostrar spinner
+  setIsSubmitting(true);
 
+  try {
+    // 1. Verificar si ya existe el empleado con social_id
+    const rs = await axios.get(`/EmployeeWithSocialId/${formData.social_id}`);
 
-    // ✅ 1. Validación: contrato obligatorio
-  if (!formData.resume) {
-    showErrorToast("Please upload the resume.");
+    if (rs.status === 202) {
+      setIsExistingEmployee(true);
+      // Empleado ya existe -> solo crear relación y enviar archivos necesarios
+
+      const relPayload = new FormData();
+      relPayload.append('social_id', formData.social_id);
+      relPayload.append('occupation_id', formData.occupation_id);
+
+      if (formData.resume instanceof File) {
+  relPayload.append('resume', formData.resume);
+} else if (formData.hasExistingResume && formData.useExistingResume) {
+  relPayload.append('useExistingResume', 'true');
+}
+
+      if (formData.driverLicenseImage) relPayload.append('driverLicenseImage', formData.driverLicenseImage);
+
+      await axios.get(`/employeeRelation/${formData.social_id}/${formData.occupation_id}`, relPayload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      await MySwal.fire({
+        icon: 'success',
+        title: 'You are already in our system!',
+        text: 'We just added your interest in this position. Do you want to apply for more?',
+        confirmButtonText: 'Yes',
+        showDenyButton: true,
+        denyButtonText: 'No'
+      }).then(async (value) => {
+        if (value.isConfirmed) {
+          const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
+          if (types.length > 0) {
+            try {
+              const similarRes = await axios.post('/occupations/similar', { types });
+              const similarJobs = similarRes.data;
+              if (similarJobs.length > 0) {
+                await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
+              }
+            } catch (error) {
+              console.error('Error fetching similar jobs:', error);
+            }
+          }
+        }
+      });
+
+      return; // Salir del flujo aquí
+    }
+  } catch (error) {
+    // Si no se pudo validar social_id, continuar con envío completo
+  console.warn("❌ No se pudo validar social_id, continuando con el envío completo.");
+
+  if (error.response) {
+    console.warn("🔍 Detalles del error (respuesta del servidor):", error.response.data);
+    console.warn("📦 Código de estado:", error.response.status);
+  } else if (error.request) {
+    console.warn("📡 La petición fue hecha pero no hubo respuesta del servidor.");
+    console.warn(error.request);
+  } else {
+    console.warn("💥 Error al configurar la petición:", error.message);
+  }
+    }
+
+  // --- Aquí continúa el flujo normal con todas las validaciones y envío ---
+
+  // Validaciones iniciales
+// Validación del resume: se pide solo si NO hay resume existente ni archivo cargado
+if (!formData.resume && !formData.hasExistingResume) {
+  showErrorToast("Please upload the resume.");
+  setIsSubmitting(false);
+  return;
+}
+
+if (formData.resume) {
+  const maxSize = 5 * 1024 * 1024; // 5 MB
+  if (formData.resume.size > maxSize) {
+    showErrorToast("Resume file must be smaller than 5MB.");
+    setIsSubmitting(false);
     return;
   }
+}
 
-  // ✅ 2. Validación: tamaño máximo del resume
-  if (formData.resume) {
-    const maxSize = 5 * 1024 * 1024; // 5 MB
-    if (formData.resume.size > maxSize) {
-      showErrorToast("Resume file must be smaller than 5MB.");
-      return;
-    }
-  }
 
-  // ✅ 3. Validaciones para certifications
   if (formData.certifications && formData.certifications.length > 0) {
     const maxCertFiles = 5;
     const maxSize = 5 * 1024 * 1024; // 5 MB
 
     if (formData.certifications.length > maxCertFiles) {
       showErrorToast("You can upload a maximum of 5 certification files.");
+      setIsSubmitting(false);
       return;
     }
 
     const oversized = formData.certifications.find(file => file.size > maxSize);
     if (oversized) {
       showErrorToast(`Each certification file must be under 5MB. "${oversized.name}" is too large.`);
+      setIsSubmitting(false);
       return;
     }
   }
 
-  // ✅ 4. Convertir fechas y normalizar datos
-const formatDateToMySQL = (date) => {
-  if (!date) return null;
+  // Función para normalizar fechas
+  const formatDateToMySQL = (date) => {
+    if (!date) return null;
 
-  // Si ya es string con formato correcto
-  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return date;
-  }
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
 
-  // Si es string tipo MM/DD/YYYY
-  if (typeof date === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-    const [month, day, year] = date.split('/');
-    return `${year}-${month}-${day}`;
-  }
+    if (typeof date === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const [month, day, year] = date.split('/');
+      return `${year}-${month}-${day}`;
+    }
 
-  // Si es un objeto Date
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = `${date.getMonth() + 1}`.padStart(2, '0');
+      const day = `${date.getDate()}`.padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
-  return null; // Si no pasa ninguna validación
-};
+    return null;
+  };
 
-
-
+  // Normalizar datos
   const normalizedData = {
     ...formData,
     dfac: formData.dfac === 'Yes' ? 1 : 0,
@@ -749,7 +861,7 @@ const formatDateToMySQL = (date) => {
     occupation_id: parseInt(formData.occupation_id),
   };
 
-  // ✅ 5. Armar formPayload
+  // Construir payload de formulario
   const formPayload = new FormData();
 
   const validRefs = normalizedData.references.filter(ref => !isEmptyObject(ref));
@@ -769,19 +881,21 @@ const formatDateToMySQL = (date) => {
     formPayload.append('workHistory', JSON.stringify(validHistory));
   }
 
-Object.entries(normalizedData).forEach(([key, value]) => {
-  if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
+  Object.entries(normalizedData).forEach(([key, value]) => {
+    if (['references', 'workHistory', 'certifications', 'resume'].includes(key)) return;
 
-  // Solo agregamos si el valor no es null, undefined o cadena vacía
-  if (value !== null && value !== undefined && value !== '') {
-    formPayload.append(key, value);
-  }
-});
+    if (value !== null && value !== undefined && value !== '') {
+      formPayload.append(key, value);
+    }
+  });
+
+if (formData.resume instanceof File) {
+  formPayload.append('resume', formData.resume);
+} else if (formData.hasExistingResume && formData.useExistingResume) {
+  formPayload.append('useExistingResume', 'true');
+}
 
 
-  if (formData.resume) {
-    formPayload.append('resume', formData.resume);
-  }
 
   if (formData.certifications && formData.certifications.length > 0) {
     formData.certifications.forEach((file) => {
@@ -797,98 +911,58 @@ Object.entries(normalizedData).forEach(([key, value]) => {
     formPayload.append('driverLicenseImage', formData.driverLicenseImage);
   }
 
-  // ✅ Debug opcional
+  // Debug opcional
   for (const pair of formPayload.entries()) {
     console.log(`${pair[0]}:`, pair[1]);
   }
 
-  // ✅ Envío del formulario
-try {
+  try {
+    // Enviar formulario completo
+    const response = await axios.post('/createEmployee', formPayload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-    const rs =  await axios.get(`/EmployeeWithSocialId/${formData.social_id}`)
-
-    if(rs.status == 202){
-
-        const rs = await axios.get(`/employeeRelation/${formData.social_id}/${formData.occupation_id}`)
-
-        await MySwal.fire({
-        icon: 'success',
-        title: 'Form submitted successfully!',
-        text: 'We will contact you soon. \n\nWould you like to apply for other occupations?',
-        confirmButtonText: 'Yes',
-        showDenyButton: true,
-        denyButtonText: 'No'
-      }).then(async (value)=>{
-        if(value.isConfirmed){
-            // Buscar trabajos similares y mostrar modal
-            const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
-            if (types.length > 0) {
-                try {
-                const similarRes = await axios.post('/occupations/similar', { types });
-                const similarJobs = similarRes.data;
-
-                if (similarJobs.length > 0) {
-                    await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
-
-                }
-                } catch (error) {
-                console.error('Error fetching similar jobs:', error);
-                // Opcional: manejar error con setErrorMsg o showErrorToast
-                }
-
+    await MySwal.fire({
+      icon: 'success',
+      title: 'Form submitted successfully!',
+      text: 'We will contact you soon. \n\nWould you like to apply for other occupations?',
+      confirmButtonText: 'Yes',
+      showDenyButton: true,
+      denyButtonText: 'No'
+    }).then(async (value) => {
+      if (value.isConfirmed) {
+        const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
+        if (types.length > 0) {
+          try {
+            const similarRes = await axios.post('/occupations/similar', { types });
+            const similarJobs = similarRes.data;
+            if (similarJobs.length > 0) {
+              await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
             }
+          } catch (error) {
+            console.error('Error fetching similar jobs:', error);
+          }
         }
-      });
-    }else{
-        const response = await axios.post('/createEmployee', formPayload, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-      // Mostrar SweetAlert de éxito
-      await MySwal.fire({
-        icon: 'success',
-        title: 'Form submitted successfully!',
-        text: 'We will contact you soon. \n\nWould you like to apply for other occupations?',
-        confirmButtonText: 'Yes',
-        showDenyButton: true,
-        denyButtonText: 'No'
-      }).then(async (value)=>{
-        if(value.isConfirmed){
-            // Buscar trabajos similares y mostrar modal
-            const types = (job?.type || '').split(',').map(t => t.trim()).filter(Boolean);
-            if (types.length > 0) {
-                try {
-                const similarRes = await axios.post('/occupations/similar', { types });
-                const similarJobs = similarRes.data;
-
-                if (similarJobs.length > 0) {
-                    await showSimilarJobsModal(similarJobs, formData, showSuccessToast, showErrorToast);
-                }
-                } catch (error) {
-                console.error('Error fetching similar jobs:', error);
-                // Opcional: manejar error con setErrorMsg o showErrorToast
-                }
-
-            }
-        }
-      });
-    }
-} catch (error) {
-  if (error.response) {
-    console.error('Error response data:', error.response.data);
-    if (error.response.data.validator) {
-      const validatorErrors = error.response.data.validator.errors || error.response.data;
-      setErrorMsg(JSON.stringify(validatorErrors, null, 2));
+      }
+    });
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      if (error.response.data.validator) {
+        const validatorErrors = error.response.data.validator.errors || error.response.data;
+        setErrorMsg(JSON.stringify(validatorErrors, null, 2));
+      } else {
+        setErrorMsg('Error in the form validation.');
+      }
     } else {
-      setErrorMsg('Error in the form validation.');
+      console.error('Error general:', error);
+      setErrorMsg("There was a problem submitting the form. Please try again.");
     }
-  } else {
-    console.error('Error general:', error);
-    setErrorMsg("There was a problem submitting the form. Please try again.");
-  }
-}   finally {
-    setIsSubmitting(false); // ✅ Ocultar spinner siempre
+  } finally {
+    setIsSubmitting(false);
   }
 };
+
 
 
 
@@ -1020,58 +1094,64 @@ try {
   </>
 )}
 
+{/* Paso 2 - Resume */}
+{step === 2 && (
+  <div className="flex flex-col items-center justify-center min-h-[290px]">
+    <p className="mb-3 text-center max-w-xl">
+      <strong>Got a resume?</strong> You can upload it in Word or PDF format and we'll use the information to pre-fill your application, saving you time! If you'd rather not upload one, just click <strong>'Next'</strong>.
+    </p>
+    <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
+    <div className="flex flex-col items-center gap-2 mt-10 max-w-md w-full">
+      <button
+        type="button"
+        onClick={() => document.getElementById('resumeInput').click()}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+      >
+        Choose Resume File
+      </button>
 
-      {/* Paso 2 - Resume */}
-      {step === 2 && (
-        <div className="flex flex-col items-center justify-center min-h-[290px]">
-          <p className="mb-3 text-center max-w-xl">
-            <strong>Got a resume?</strong> You can upload it in Word or PDF format and we'll use the information to pre-fill your application, saving you time! If you'd rather not upload one, just click <strong>'Next'</strong>.
-          </p>
-          <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
-          <div className="flex flex-col items-center gap-2 mt-10 max-w-md w-full">
-          <button
-            type="button"
-            onClick={() => document.getElementById('resumeInput').click()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+<span className="text-gray-600 text-sm">
+  {formData.resume
+    ? formData.resume.name
+    : formData.hasExistingResume
+      ? "Resume already uploaded"
+      : "No resume file selected"
+  }
+</span>
+
+
+
+      <input
+        id="resumeInput"
+        type="file"
+        accept="application/pdf"
+        onChange={(e) => handleFileChange(e, 'resume')}
+        className="hidden"
+      />
+    </div>
+
+    {files.length > 0 && (
+      <div className="flex flex-wrap gap-2 max-w-md mt-4">
+        {files.map((file, index) => (
+          <div
+            key={index}
+            className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
           >
-            Choose Resume File
-          </button>
+            <span className="truncate">{file.name}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveFile(index)}
+              className="ml-2 text-red-600 hover:text-red-800 font-bold"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
-          <span className="text-gray-600 text-sm">
-            {formData.resume ? formData.resume.name : 'No resume file selected'}
-          </span>
-
-          <input
-            id="resumeInput"
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => handleFileChange(e, 'resume')}
-            className="hidden"
-          />
-        </div>
-
-          {files.length > 0 && (
-            <div className="flex flex-wrap gap-2 max-w-md">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center bg-gray-200 px-3 py-1 rounded-full text-sm max-w-xs truncate"
-                >
-                  <span className="truncate">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFile(index)}
-                    className="ml-2 text-red-600 hover:text-red-800 font-bold"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-      )}
 
 
 

@@ -54,23 +54,41 @@ class EmployeeController extends Controller
             return response()->json(['msg'=>'Validate Error'], 400);
         }
     }
+public function employeeBySocialId(Request $request, $socialId){
+    try {
+        $Employee = Employee::find($socialId);
 
-    public function employeeBySocialId(Request $request,$socialId){
-        try{
-            $Employee = Employee::find($socialId);
+        if ($Employee) {
+            $address = $Employee->addresses()->get();
+            $reference = $Employee->references()->get();
+            $workHistory = $Employee->workHistorys()->get();
+            $resumeDoc = $Employee->documents()->where('type', 'resume')->first();
 
-            if($Employee){
-                $address = $Employee->addresses()->get();
-                $reference = $Employee->references()->get();
-                $workHistory = $Employee->workHistorys()->get();
-                return response()->json(['employee'=>$Employee,'address'=>$address,'reference'=>$reference,'workHistory'=>$workHistory ],202);
-            }else{
-                return response()->json(['employee'=>'no exist employee'],200);
+            $resumeUrl = null;
+            if ($resumeDoc) {
+                // Aquí conviertes la ruta de storage en una URL pública
+                $resumeUrl = \Storage::disk('public')->url($resumeDoc->url);
+                // Cambia 'public' si usas otro disco, igual que en tu método de almacenamiento
             }
-        }catch(ValidationException $e){
-            return response()->json(['msg'=>$e]);
+
+
+
+            return response()->json([
+                'employee' => $Employee,
+                'address' => $address,
+                'reference' => $reference,
+                'workHistory' => $workHistory,
+                'resume' => $resumeUrl,
+            ], 202);
+        } else {
+            return response()->json(['employee' => 'no exist employee'], 200);
         }
+    } catch (ValidationException $e) {
+        return response()->json(['msg' => $e]);
     }
+}
+
+
 
     public function createEmployee(Request $request){
         try{

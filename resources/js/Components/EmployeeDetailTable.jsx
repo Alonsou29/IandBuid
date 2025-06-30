@@ -49,7 +49,7 @@ export default function EmployeeDetailTable({ address, workHistory, references, 
   ];
 
   const milCols = [
-    { name: "Branch", selector: r => r.branch, center: true },
+    { name: "Branch", selector: r => r.military_desc, center: true },
     { name: "Start", selector: r => r.start_services, center: true },
     { name: "End", selector: r => r.end_services, center: true },
   ];
