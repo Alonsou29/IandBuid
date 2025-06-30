@@ -43,10 +43,16 @@ class EmployeeController extends Controller
             $occupation = Occupation::where('id',$occupationId)
             ->where('isDelete', false)->get();
             $employee = Employee::find($socialId);
+            $emploHasOccu= $employee->occupations()->where('id',$occupationId)->get();
 
             if(!empty($occupation)){
-                $employee->occupations()->attach($occupationId);
-                return response()->json(['msg'=>'Postulation Success!'],200);
+                if(count($emploHasOccu) === 0){
+                    $employee->occupations()->attach($occupationId);
+                    return response()->json(['msg'=>'Postulation Success!'],200);
+                }else{
+                    return response()->json(['msg'=>'you are already applying!'],208);
+
+                }
             }else{
                 return response()->json(['msg'=>'Postulation Error'],430);
             }
@@ -70,9 +76,6 @@ public function employeeBySocialId(Request $request, $socialId){
                 $resumeUrl = \Storage::disk('public')->url($resumeDoc->url);
                 // Cambia 'public' si usas otro disco, igual que en tu método de almacenamiento
             }
-
-
-
             return response()->json([
                 'employee' => $Employee,
                 'address' => $address,
@@ -236,15 +239,12 @@ public function employeeBySocialId(Request $request, $socialId){
 
             $doc = $employee->documents()->where('type',$type)->get();
 
-            dd($doc);
-
             if($type == 'contract' || $type == 'resume' || $type == 'license'){
                 foreach($doc as $document){
                     if(Storage::disk($this->disk)->exists($document->url)){
                         if (ob_get_level()){
                             ob_end_clean();
                         }
-
                         $headers = [
                             'Content-Type'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                         ];
