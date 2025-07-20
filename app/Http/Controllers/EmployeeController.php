@@ -294,4 +294,14 @@ public function employeeBySocialId(Request $request, $socialId){
             return response()->json(['msg'=>$e]);
         }
     }
+
+    public function jobsApplied(Request $request, $id){
+        try{    
+            $employee = Employee::find($id);
+            $occupation = $employee->occupations()->get();
+            return response()->json(['msg'=>$occupation]);
+        }catch(ValidationException $e){
+            return response()->json(['msg'=>$e]);
+        }
+    }
 }
