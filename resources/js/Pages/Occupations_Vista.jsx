@@ -111,7 +111,7 @@ export default function Jobs({ occupations }) {
                     allowOutsideClick: false,
                     heightAuto: false,
                     width: "80%",
-                    background: "#f0f0f0",
+                    background: "#f3f4f6",
                     backdrop: "rgba(0, 0, 0, 0.4)",
                     customClass: {
                       popup: "overflow-auto max-h-[100vh] p-4 fixed-height-modal",

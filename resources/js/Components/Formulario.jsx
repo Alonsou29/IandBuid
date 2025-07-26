@@ -667,7 +667,7 @@ const showSimilarJobsModal = async (jobs, formData, showSuccessToast, showErrorT
   await MySwal.fire({
     title: 'Other Jobs You May Like',
     html: `
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 ">
         ${jobs.map((job) => `
           <div class="p-4 bg-white rounded shadow">
             <h3 class="text-red-600 font-bold">${job.name}</h3>
@@ -690,6 +690,7 @@ const showSimilarJobsModal = async (jobs, formData, showSuccessToast, showErrorT
     background: '#f9f9f9',
     didOpen: () => {
       const container = MySwal.getHtmlContainer();
+      container.style.maxHeight = '60vh';
       const buttons = container.querySelectorAll('.apply-btn');
 
       buttons.forEach((btn) => {
@@ -977,42 +978,59 @@ if (formData.resume instanceof File) {
 
     <form
   onSubmit={handleSubmit}
-  className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6 h-[360px] overflow-auto"
+className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6 max-h-[80vh] overflow-auto"
+
+
 >
 
-      {/* Paso 1 - job */}
-      {step === 0 && (
-<div className="flex justify-center items-center min-h-[230px] px-4">
-  <div className="w-full max-w-md">
-    {showJobSelect ? (
-      <select
-        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition"
-        value={job}
-        onChange={(e) => setJob(e.target.value)}
-      >
-        <option value="">Select a job</option>
-        {/* Aquí van tus opciones */}
-      </select>
-    ) : (
-      selectedJob && (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-          <h3 className="text-2xl font-bold text-red-700">{selectedJob.name}</h3>
-          <p>
-            <span className="font-semibold text-gray-700">Type: </span>
-            <span className="text-gray-600">{selectedJob.type}</span>
-          </p>
-          <p>
-            <span className="font-semibold text-gray-700">Location: </span>
-            <span className="text-gray-600">{selectedJob.ubication}</span>
-          </p>
-          <p className="text-gray-600 leading-relaxed">{selectedJob.description}</p>
-        </div>
-      )
-    )}
-  </div>
-</div>
+{step === 0 && selectedJob && (
+  <div className="flex justify-center items-center min-h-[280px] px-4">
+    <div className="w-full max-w-xl">
+      {/* 🌐 Tabla para pantallas medianas en adelante */}
+      <table className="hidden sm:table w-full text-gray-800 border border-gray-200 rounded-md overflow-hidden shadow">
+        <tbody>
+          <tr className="border-b">
+            <td className="bg-red-300 px-4 py-2 text-black w-1/3 font-semibold">Name</td>
+            <td className="px-4 py-2">{selectedJob.name}</td>
+          </tr>
+          <tr className="border-b">
+            <td className="bg-gray-100 px-4 py-2 text-black font-semibold">Type</td>
+            <td className="px-4 py-2">{selectedJob.type}</td>
+          </tr>
+          <tr className="border-b">
+            <td className="bg-red-300 px-4 py-2 text-black font-semibold">Location</td>
+            <td className="px-4 py-2">{selectedJob.ubication}</td>
+          </tr>
+          <tr>
+            <td className="bg-gray-100 px-4 py-2 text-black align-top font-semibold">Description</td>
+            <td className="px-4 py-2">{selectedJob.description}</td>
+          </tr>
+        </tbody>
+      </table>
 
-      )}
+      {/* 📱 Vista tipo tarjeta para móviles */}
+      <div className="sm:hidden bg-white rounded-md shadow border border-gray-200 p-4 space-y-4">
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-red-700 mb-1 bg-red-200 rounded">Name</span>
+          <span className="text-gray-800">{selectedJob.name}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-gray-700 mb-1 bg-red-200 rounded">Type</span>
+          <span className="text-gray-800">{selectedJob.type}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-red-700 mb-1 bg-red-200 rounded">Location</span>
+          <span className="text-gray-800">{selectedJob.ubication}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-gray-700 mb-1 bg-red-200 rounded">Description</span>
+          <span className="text-gray-800">{selectedJob.description}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
 {successToastMessage && (
   <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade-in">
@@ -1030,7 +1048,7 @@ if (formData.resume instanceof File) {
 {/* Paso 3 - Personal Information */}
 {step === 1 && (
   <>
-    <div className="flex justify-center items-center min-h-[200px]"> {/* Ajusta min-h según el alto deseado */}
+    <div className="flex justify-center items-center min-h-[280px]"> {/* Ajusta min-h según el alto deseado */}
       <div className="w-full max-w-xs">
         <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
           Driver License
@@ -1055,7 +1073,7 @@ if (formData.resume instanceof File) {
           <button
             type="button"
             onClick={() => document.getElementById('driverLicenseInput').click()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
           >
             Upload Driver License Image
           </button>
@@ -1097,15 +1115,19 @@ if (formData.resume instanceof File) {
 {/* Paso 2 - Resume */}
 {step === 2 && (
   <div className="flex flex-col items-center justify-center min-h-[290px]">
+        <p className="mb-3 text-right text-5xl max-w-xl">
+          <br />
+      <strong>Got a resume?</strong> 
+    </p>
     <p className="mb-3 text-center max-w-xl">
-      <strong>Got a resume?</strong> Please upload your resume to continue with the registration. <strong>'Next'</strong>.
+      Please upload your resume to continue with the registration. <strong>'Next'</strong>.
     </p>
     <label className="block font-semibold mb-2">Upload PDFs (Max 1)</label>
     <div className="flex flex-col items-center gap-2 mt-10 max-w-md w-full">
       <button
         type="button"
         onClick={() => document.getElementById('resumeInput').click()}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        className="px-4 py-2 bg-red-600 text-white rounded border-black hover:bg-red-700 transition"
       >
         Choose Resume File
       </button>
@@ -1371,106 +1393,100 @@ if (formData.resume instanceof File) {
 
       {/* Paso 4 - Military Experience */}
 {step === 4 && (
-  <>
+  <div className="w-full max-w-[90vw] md:max-w-3xl lg:max-w-5xl mx-auto p-4 sm:p-6 md:p-8 bg-white  rounded space-y-6">
     {/* Pregunta 1 */}
-    <label className="block text-left font-semibold mb-1">
+    <label className="block text-left font-semibold mb-2 text-gray-900">
       1. Did you have military experience?
     </label>
-    <div className={`flex flex-wrap items-center gap-6 mb-4 ${errores.dfac ? 'border border-red-500 p-2 rounded' : ''}`}>
+    <div className={`flex flex-wrap items-center gap-6 mb-6 ${errores.dfac ? 'border border-red-500 p-3 rounded' : ''}`}>
       {['Yes', 'No'].map((option) => (
-        <label key={option} className="flex items-center gap-2">
+        <label key={option} className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
             name="dfac"
             value={option}
             checked={formData.dfac === option}
             onChange={handleChange}
-            className="accent-red-600"
+            className="accent-red-600 cursor-pointer"
           />
-          <span className="text-sm text-gray-800">{option}</span>
+          <span className="text-base text-gray-800">{option}</span>
         </label>
       ))}
     </div>
 
     {/* Pregunta 2 */}
-    <label className="block text-left font-semibold mb-1">
+    <label className="block text-left font-semibold mb-2 text-gray-900">
       2. Branch of the U.S. Armed Forces
     </label>
-    <div className={`flex flex-wrap items-center gap-6 mb-4 ${errores.branch ? 'border border-red-500 p-2 rounded' : ''}`}>
+    <div className={`flex flex-wrap items-center gap-6 mb-6 ${errores.branch ? 'border border-red-500 p-3 rounded' : ''}`}>
       {['Air Force', 'Army', 'Navy', 'U.S. Coast Guard', 'None'].map((option) => (
-        <label key={option} className="flex items-center gap-2">
+        <label key={option} className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
             name="branch"
             value={option}
             checked={formData.branch === option}
             onChange={handleChange}
-            className="accent-red-600"
+            className="accent-red-600 cursor-pointer"
           />
-          <span className="text-sm text-gray-800">{option}</span>
+          <span className="text-base text-gray-800">{option}</span>
         </label>
       ))}
     </div>
 
-{/* Pregunta 3 - Airport Code */}
-<label className="block text-left font-semibold mb-1">
-  3. Departing airport (code)
-</label>
-<div className="flex justify-start">
-  <input
-    onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
-    inputMode="numeric"
-    name="airport"
-    placeholder="(code)"
-    value={formData.airport}
-    onChange={handleChange}
-    className={`border rounded px-3 py-2 mb-4 w-32 ${errores.airport ? 'border-red-500' : ''}`}
-  />
-</div>
+    {/* Pregunta 3 - Airport Code */}
+    <label className="block text-left font-semibold mb-2 text-gray-900">
+      3. Departing airport (code)
+    </label>
+    <div className="flex justify-start mb-8">
+      <input
+        onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}
+        inputMode="numeric"
+        name="airport"
+        placeholder="(code)"
+        value={formData.airport}
+        onChange={handleChange}
+        className={`border rounded px-4 py-3 w-36 sm:w-40 md:w-48 text-lg focus:outline-none focus:ring-2 focus:ring-red-600 transition ${errores.airport ? 'border-red-500' : 'border-gray-300'}`}
+      />
+    </div>
 
+    {/* Pregunta 4 - Fechas */}
+    <label className="block text-left font-semibold mb-3 text-gray-900">4. Date Available</label>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div>
+        <label className="block text-left font-semibold mb-2 text-gray-800">- Start Date</label>
+        <ReactDatePicker
+          selected={formData.startDate || null}
+          onChange={(date) => {
+            handleChange({ target: { name: "startDate", value: date } });
+          }}
+          placeholderText="MM/DD/YYYY"
+          dateFormat="MM/dd/yyyy"
+          className={`border rounded px-4 py-3 w-full sm:w-auto text-lg focus:outline-none focus:ring-2 focus:ring-red-600 transition ${errores.startDate ? "border-red-500" : "border-gray-300"}`}
+        />
+      </div>
 
-{/* Pregunta 4 - Fechas */}
-<label className="block text-left font-semibold mb-1">4. Date Available</label>
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-<div>
-  <label className="block text-left font-semibold mb-1">- Start Date</label>
-  <div className="flex justify-start">
-<ReactDatePicker
-  selected={formData.startDate || null}  // aquí un objeto Date o null
-  onChange={(date) => {
-    handleChange({ target: { name: "startDate", value: date } });  // guardar Date directamente
-  }}
-  placeholderText="MM/DD/YYYY"
-  dateFormat="MM/dd/yyyy"
-  className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.startDate ? "border-red-500" : ""}`}
-/>
+      <div>
+        <label className="block text-left font-semibold mb-2 text-gray-800">- End Date</label>
+        <ReactDatePicker
+          selected={formData.endDate || null}
+          onChange={(date) => {
+            handleChange({ target: { name: "endDate", value: date } });
+          }}
+          placeholderText="MM/DD/YYYY"
+          dateFormat="MM/dd/yyyy"
+          className={`border rounded px-4 py-3 w-full sm:w-auto text-lg focus:outline-none focus:ring-2 focus:ring-red-600 transition ${errores.endDate ? "border-red-500" : "border-gray-300"}`}
+        />
+      </div>
+    </div>
   </div>
-</div>
-
-{/* End Date */}
-<div>
-  <label className="block text-left font-semibold mb-1">- End Date</label>
-  <div className="flex justify-start">
-<ReactDatePicker
-  selected={formData.endDate || null}
-  onChange={(date) => {
-    handleChange({ target: { name: "endDate", value: date } });
-  }}
-  placeholderText="MM/DD/YYYY"
-  dateFormat="MM/dd/yyyy"
-  className={`border rounded px-3 py-2 w-40 sm:w-48 ${errores.endDate ? "border-red-500" : ""}`}
-/>
-  </div>
-  </div>
-</div>
-
-  </>
 )}
+
 
 
       {/* Paso 5 - References */}
 {step === 5 && (
-  <div className="flex gap-6">
+  <div className="flex gap-6 ">
     {/* Reference 1 */}
     {formData.references[0] && (
       <div className="flex-1 border border-gray-300 rounded-md p-4">
@@ -1758,9 +1774,12 @@ if (formData.resume instanceof File) {
           <div className="flex flex-col gap-8">
             {/* CONTRACT SECTION */}
             <div className="text-center">
-              <h2 className="font-bold text-lg mb-2">📄 Employee Worksheet Upload</h2>
-              <p className="mb-4">
-                <strong>PLEASE DOWNLOAD</strong><br />
+              <h2 className="font-bold text-start text-lg mb-2">📄 Employee Worksheet Upload</h2>
+                <p className=" mb-3 text-start text-3xl max-w-xl">
+                <strong>PLEASE DOWNLOAD</strong>
+              </p>
+              <p className="mb-4 text-justify">
+                <br />
                 For a more effective assignment process for your job application, kindly download this document, complete the contract information, and then re-upload it to this section.
               </p>
 
@@ -1769,7 +1788,7 @@ if (formData.resume instanceof File) {
                 <a
                   href="/files/Employee_Worksheet.docx"
                   download
-                  className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition shadow"
+                  className="bg-red-600 text-white px-5 py-2 rounded-md hover:bg-red-700 transition shadow"
                 >
                   Download Contract
                 </a>
@@ -1802,8 +1821,8 @@ if (formData.resume instanceof File) {
 
             {/* CERTIFICATIONS SECTION */}
             <div>
-              <h2 className="font-bold text-lg mb-2">📎 Certifications (Optional)</h2>
-              <p className="mb-2">
+              <h2 className="font-bold text-start text-lg mb-2">📎 Certifications (Optional)</h2>
+              <p className="mb-2 text-justify">
                 You may upload any certificates that strengthen your work experience in this section. This is optional, and not having one will not affect the personnel selection process.
               </p>
 
@@ -1816,7 +1835,7 @@ if (formData.resume instanceof File) {
                   <button
                     type="button"
                     onClick={() => document.getElementById('certificationsInput').click()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
                   >
                     Choose Files
                   </button>
