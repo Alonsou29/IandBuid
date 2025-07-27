@@ -978,7 +978,7 @@ if (formData.resume instanceof File) {
 
     <form
   onSubmit={handleSubmit}
-className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6 max-h-[80vh] overflow-auto"
+className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow rounded space-y-6 h-[380px] overflow-auto"
 
 
 >
