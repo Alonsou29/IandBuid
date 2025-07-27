@@ -387,7 +387,7 @@ export default function Welcome() {
 
 {/* Footer */}
 <footer className="relative bg-white py-10 text-center text-black text-sm sm:text-base font-spartan font-extrabold">
-  © 2024 I and C Builders - All rights reserved.
+  © 2025 I and C Builders - All rights reserved.
 
   {/* <a
     href="/login"
