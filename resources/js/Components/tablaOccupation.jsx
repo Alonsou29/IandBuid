@@ -82,7 +82,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       selector: row => row.description,
       sortable: true,
       center: true,
-      wrap: true,
+    //   wrap: true,
       maxWidth: '220px',
     },
     {
