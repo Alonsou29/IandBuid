@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/jobsApplied/{id}', [EmployeeController::class, 'jobsApplied']);
 Route::post('/occupations/similar', [OccupationController::class, 'similarJobs']);
 
+Route::get('/verifyDocuments/{id}', [EmployeeController::class, 'verifyDocuments']);
 Route::get('/postu/{id}',[OccupationController::class, 'postulation']);
 Route::get('/employeeRelation/{social_id}/{occupation_id}', [EmployeeController::class, 'employeeRelation']);
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);

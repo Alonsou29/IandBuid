@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use ZipArchive;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -296,12 +297,27 @@ public function employeeBySocialId(Request $request, $socialId){
     }
 
     public function jobsApplied(Request $request, $id){
-        try{    
+        try{
             $employee = Employee::find($id);
             $occupation = $employee->occupations()->get();
             return response()->json(['msg'=>$occupation]);
         }catch(ValidationException $e){
             return response()->json(['msg'=>$e]);
+        }
+    }
+
+    public function verifyDocuments(Request $request, $id){
+        try{
+            $employee = Employee::find($id);
+            if($employee){
+                $certificacion = !$employee->documents()->where('type','certification')->get()->isEmpty() ? 1 : 0;
+                $contract = !$employee->documents()->where('type','contract')->get()->isEmpty() ? 1 : 0;
+                return response()->json(['hasCtf'=>$certificacion , 'hasContract'=>$contract, ], 207);
+            }else{
+                return response()->json(['msg'=>'El empleado no existe']);
+            }
+        }catch(Exception $e){
+            return response()->json(['Error al validar los certificados']);
         }
     }
 }

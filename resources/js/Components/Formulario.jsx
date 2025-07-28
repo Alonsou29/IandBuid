@@ -291,8 +291,12 @@ const validateCurrentStep = () => {
   // Paso 2 - Información Personal
   if (step === 1) {
     const requiredFields = [
-      'social_id'
+      'social_id',
     ];
+    if (!isExistingEmployee && !formData.driverLicenseImage) {
+        showErrorToast("Please upload the driver license.");
+        return false;
+    }
 
     // Validar campos vacíos
     requiredFields.forEach(field => {
@@ -311,7 +315,6 @@ const validateCurrentStep = () => {
 
 
 if (step === 2) {
-    console.log("🧠 isExistingEmployee:", isExistingEmployee); // debug
   const newErrors = {};
   const maxFileSize = 3 * 1024 * 1024;
 
@@ -349,10 +352,6 @@ if (step === 2) {
   setErrores(newErrors);
   return Object.keys(newErrors).length === 0;
 }
-
-
-
-
 
   // Paso 2 - Información Personal
 if (step === 3) {
@@ -557,10 +556,6 @@ if (step === 6) {
   setErrores({});
   return true;
 };
-
-
-
-
 
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
@@ -1070,7 +1065,7 @@ className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow roun
 
         {/* Campo para subir imagen del Driver License */}
         <div className="flex flex-col items-center gap-2 mt-4">
-          <button
+            <button
             type="button"
             onClick={() => document.getElementById('driverLicenseInput').click()}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
@@ -1117,7 +1112,7 @@ className="w-full max-w-screen-xl mx-auto p-4 sm:p-6 md:p-8 bg-white shadow roun
   <div className="flex flex-col items-center justify-center min-h-[290px]">
         <p className="mb-3 text-right text-5xl max-w-xl">
           <br />
-      <strong>Got a resume?</strong> 
+      <strong>Got a resume?</strong>
     </p>
     <p className="mb-3 text-center max-w-xl">
       Please upload your resume to continue with the registration. <strong>'Next'</strong>.

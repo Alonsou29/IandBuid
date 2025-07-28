@@ -4,8 +4,12 @@ import axios from 'axios';
 
 export default function TablePostulation({ occupationId, occupationName }) {
   const [applicants, setApplicants] = useState([]);
+  const [vfdoc, setVfdoc] = useState({});
+  const [loadingVfdoc, setLoadingVfdoc] = useState(true);
+  const [errorVfdoc, setErrorVfdoc] = useState(null);
   const [filterText, setFilterText] = useState('');
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchApplicants = async () => {
@@ -23,6 +27,45 @@ export default function TablePostulation({ occupationId, occupationName }) {
       fetchApplicants();
     }
   }, [occupationId]);
+
+  useEffect(() => {
+    const fetchVfdocData = async () => {
+      if (applicants.length === 0) {
+        setVfdoc({});
+        setLoadingVfdoc(false);
+        return;
+      }
+
+      setLoadingVfdoc(true);
+      setErrorVfdoc(null);
+
+      const documentStatusPromises = applicants.map(async (applicant) => {
+        try {
+          const response = await axios.get(`/verifyDocuments/${applicant.social_id}`);
+          return { applicantId: applicant.social_id, ...response.data };
+        } catch (error) {
+          console.error(`Error fetching document for ${applicant.social_id}:`, error);
+          return { applicantId: applicant.social_id, error: true, message: 'Documento no disponible' };
+        }
+      });
+
+      try {
+        const results = await Promise.all(documentStatusPromises);
+        const vfdocMap = results.reduce((acc, docStatus) => {
+          if (docStatus && docStatus.applicantId) {
+            acc[docStatus.applicantId] = docStatus;
+          }
+          return acc;
+        }, {});
+        setVfdoc(vfdocMap);
+      } catch (allErrors) {
+        setErrorVfdoc("Algunos documentos no pudieron ser cargados.");
+      } finally {
+        setLoadingVfdoc(false);
+      }
+    };
+    fetchVfdocData();
+  }, [applicants, occupationId]);
 
   const filteredApplicants = useMemo(() => {
     if (!filterText) return applicants;
@@ -213,27 +256,42 @@ export default function TablePostulation({ occupationId, occupationName }) {
   name: 'Download Info',
   center: true,
   minWidth: '260px',
-  cell: row => (
+  cell: row =>{
+    const docStatus = vfdoc[row.social_id];
+    if (loadingVfdoc) {
+      return <p className="text-gray-500 text-xs">Cargando docs...</p>;
+    }
+    if (errorVfdoc && !docStatus) {
+      return <p className="text-red-500 text-xs">Error docs.</p>;
+    }
+    if (!docStatus|| docStatus.error) {
+        return <p className="text-gray-400 text-xs">Sin info de docs.</p>;
+    }
+    return(
     <div className="flex flex-col items-center gap-y-2"> {/* vertical spacing */}
       <div className="flex flex-wrap justify-center gap-2">
-        <button
-          className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs"
-          onClick={() => handleDownloadCertificate(row)}
-        >
-          Certificates
-        </button>
+        {docStatus.hasCtf === 1 ?
+            (<button
+            className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs"
+            onClick={() => handleDownloadCertificate(row)}
+            >
+            Certificates
+            </button>) : null
+        }
         <button
           className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs"
           onClick={() => handleDownloadResume(row)}
         >
           Resume
         </button>
-        <button
-          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-xs"
-          onClick={() => handleDownloadContract(row)}
-        >
-          Contract
-        </button>
+        {  docStatus.hasContract === 1 ?
+            (<button
+            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-xs"
+            onClick={() => handleDownloadContract(row)}
+            >
+            Contract
+            </button>) : null
+        }
         <button
           className="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700 text-xs"
           onClick={() => handleDownloadDriverLicense(row)}
@@ -242,7 +300,7 @@ export default function TablePostulation({ occupationId, occupationName }) {
         </button>
       </div>
     </div>
-  ),
+  )},
 },
 
   ];
