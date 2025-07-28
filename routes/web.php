@@ -20,7 +20,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('Occupations');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
     Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
     Route::put('/updateOccupation/{id}',[OccupationController::class, 'updateOccupation']);
+    Route::get('/verifyDocuments/{id}', [EmployeeController::class, 'verifyDocuments']);
 });
 
 Route::get('/jobsApplied/{id}', [EmployeeController::class, 'jobsApplied']);

@@ -23,50 +23,96 @@ export default function TablaEmployee({ employees }) {
 
   const handleMoreInfo = async (social_id) => {
     try {
-      const res = await axios.get(`/EmployeeWithSocialId/${social_id}`);
-      const { employee, address, reference, workHistory } = res.data;
+        const res = await axios.get(`/EmployeeWithSocialId/${social_id}`);
+        const verifyDocuments = await axios.get(`/verifyDocuments/${social_id}`);
+        const { employee, address, reference, workHistory } = res.data;
+        const {hasCtf , hasContract} = verifyDocuments.data;
 
-      const military = [{
-        military_desc: employee.military_desc || 'N/A', // ✅ CORRECTO
-        start_services: employee.start_services || 'N/A',
-        end_services: employee.end_services || 'N/A',
-      }];
+        const military = [{
+            military_desc: employee.military_desc || 'N/A', // ✅ CORRECTO
+            start_services: employee.start_services || 'N/A',
+            end_services: employee.end_services || 'N/A',
+        }];
 
-      MySwal.fire({
-        title: `${employee.name} ${employee.lastname}`,
-        html: (
-          <EmployeeDetailTable
-            employee={employee}
-            address={address}
-            workHistory={workHistory}
-            references={reference}
-            military={military}
-          />
-        ),
-        showConfirmButton: false,
-        showCloseButton: true,
-        footer: `
-          <div class="flex justify-center gap-4 mt-4">
-            <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
-              Download Certifications
-            </a>
-            <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
-              Download Resume
-            </a>
-            <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
-              Download Driver License
-            </a>
-                <a href="/download/${employee.social_id}/contract" target="_blank" class="bg-purple-600 text-white px-3 py-1 rounded text-sm">
-      Download Contract
-    </a>
-          </div>
-        `,
+        var varFooter;
 
-        width: "80%",
-        customClass: {
-          popup: "swal-wide",
-        },
-      });
+        if(hasCtf === 1 && hasContract === 1){ // si tiene certificacion y contrato
+            varFooter = `
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                Download Certifications
+                </a>
+                <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                Download Resume
+                </a>
+                <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                Download Driver License
+                </a>
+                    <a href="/download/${employee.social_id}/contract" target="_blank" class="bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                Download Contract
+                </a>
+            </div>
+                `
+        }else if(hasCtf === 0 && hasContract === 1){ // si tiene contrato pero no certificacion
+            varFooter = `
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                Download Resume
+                </a>
+                <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                Download Driver License
+                </a>
+                    <a href="/download/${employee.social_id}/contract" target="_blank" class="bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                Download Contract
+                </a>
+            </div>
+                `
+        }else if(hasCtf === 1 && hasContract === 0){ // si tiene certificacion pero no contrato
+            varFooter = `
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="/download/${employee.social_id}/certification" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                Download Certifications
+                </a>
+                <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                Download Resume
+                </a>
+                <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                Download Driver License
+                </a>
+            </div>
+                `
+        }else{
+            varFooter =`
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="/download/${employee.social_id}/resume" target="_blank" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                Download Resume
+                </a>
+                <a href="/download/${employee.social_id}/license" target="_blank" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                Download Driver License
+                </a>
+            </div>
+                `
+        }
+
+        MySwal.fire({
+            title: `${employee.name} ${employee.lastname}`,
+            html: (
+            <EmployeeDetailTable
+                employee={employee}
+                address={address}
+                workHistory={workHistory}
+                references={reference}
+                military={military}
+            />
+            ),
+            showConfirmButton: false,
+            showCloseButton: true,
+            footer: varFooter,
+            width: "80%",
+            customClass: {
+                popup: "swal-wide",
+            },
+        });
     } catch (err) {
       console.error(err);
       MySwal.fire("Error fetching employee data");
@@ -93,8 +139,8 @@ const handleViewApplications = async (employeeId, employeeName) => {
         <td class="px-6 py-4 whitespace-nowrap">${job.type}</td>
         <td class="px-6 py-4 whitespace-nowrap">${job.ubication}</td>
         <td class="px-6 py-4 whitespace-nowrap">
-          ${job.status == 1 
-            ? '<span class="text-green-600 font-semibold">Active</span>' 
+          ${job.status == 1
+            ? '<span class="text-green-600 font-semibold">Active</span>'
             : '<span class="text-red-600 font-semibold">Inactive</span>'}
         </td>
       </tr>
