@@ -35,12 +35,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/deleteEmployee/{id}',[EmployeeController::class,'deleteEmployee']);
     Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
     Route::put('/updateOccupation/{id}',[OccupationController::class, 'updateOccupation']);
+    Route::get('/verifyDocuments/{id}', [EmployeeController::class, 'verifyDocuments']);
 });
 
 Route::get('/jobsApplied/{id}', [EmployeeController::class, 'jobsApplied']);
 Route::post('/occupations/similar', [OccupationController::class, 'similarJobs']);
 
-Route::get('/verifyDocuments/{id}', [EmployeeController::class, 'verifyDocuments']);
 Route::get('/postu/{id}',[OccupationController::class, 'postulation']);
 Route::get('/employeeRelation/{social_id}/{occupation_id}', [EmployeeController::class, 'employeeRelation']);
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
