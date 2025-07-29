@@ -5,7 +5,7 @@ import axios from 'axios';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { parse, format } from 'date-fns';
-// import ClipLoader from "react-spinners/ClipLoader";
+import ClipLoader from "react-spinners/ClipLoader";
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 const MySwal = withReactContent(Swal);
