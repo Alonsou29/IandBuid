@@ -265,16 +265,17 @@ const handleViewApplications = async (employeeId, employeeName) => {
           />
         </div>
       </div>
-
-      <DataTable
-        columns={columns}
-        data={filteredEmployees}
-        pagination
-        highlightOnHover
-        pointerOnHover
-        customStyles={customStyles}
-        persistTableHead
-      />
+      <div className="overflow-x-auto overflow-y-auto">
+        <DataTable
+          columns={columns}
+          data={filteredEmployees}
+          pagination
+          highlightOnHover
+          pointerOnHover
+          customStyles={customStyles}
+          persistTableHead
+        />
+      </div>
     </div>
   );
 }

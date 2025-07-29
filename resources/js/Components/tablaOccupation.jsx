@@ -11,6 +11,14 @@ const MySwal = withReactContent(Swal);
 export default function TablaOccupations({ occupations, setOccupations, onOccupationSeleccionado }) {
   const [filterText, setFilterText] = useState('');
   const [selectedRow, setSelectedRow] = useState(null);
+  const [expandedRows, setExpandedRows] = useState({});
+const toggleExpand = (id) => {
+  setExpandedRows(prev => ({
+    ...prev,
+    [id]: !prev[id]
+  }));
+};
+
 
   const handleCrearClick = () => {
     MySwal.fire({
@@ -82,8 +90,31 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
       selector: row => row.description,
       sortable: true,
       center: true,
-    //   wrap: true,
+      wrap: true,
       maxWidth: '220px',
+      cell: row => {
+        const words = row.description?.split(' ') || [];
+        const isExpanded = expandedRows[row.id]; // Usa row.id como clave única
+        const shouldTruncate = words.length > 15;
+
+        const displayText = isExpanded || !shouldTruncate
+          ? row.description
+          : words.slice(0, 15).join(' ') + '...';
+
+        return (
+          <div className="text-left text-sm leading-snug">
+            <p>{displayText}</p>
+            {shouldTruncate && (
+              <button
+                onClick={() => toggleExpand(row.id)}
+                className="text-blue-600 text-xs underline mt-1"
+              >
+                {isExpanded ? 'See less' : 'See more'}
+              </button>
+            )}
+          </div>
+        );
+      },
     },
     {
       name: 'Ubication',
@@ -280,7 +311,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto">
         <DataTable
           columns={columns}
           data={filteredData}
@@ -294,7 +325,7 @@ export default function TablaOccupations({ occupations, setOccupations, onOccupa
           responsive
           fixedHeader
           fixedHeaderScrollHeight="500px"
-          style={{ tableLayout: 'fixed' }} // ✅ esto es clave
+          style={{ tableLayout: 'fixed' }} 
         />
       </div>
     </div>
