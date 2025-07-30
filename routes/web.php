@@ -20,7 +20,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Occupations');
+    return redirect("/listaOccupation");
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/formularioOccupation', function () {return Inertia::render('OccuForm');});
     Route::put('/updateOccupation/{id}',[OccupationController::class, 'updateOccupation']);
     Route::get('/verifyDocuments/{id}', [EmployeeController::class, 'verifyDocuments']);
+    Route::get('/listarEmployee',[EmployeeController::class, 'listaEmployees'])->name('workers.index');
 });
 
 Route::get('/jobsApplied/{id}', [EmployeeController::class, 'jobsApplied']);
@@ -46,7 +47,6 @@ Route::get('/employeeRelation/{social_id}/{occupation_id}', [EmployeeController:
 Route::post('/createEmployee',[EmployeeController::class, 'createEmployee']);
 Route::put('/modifyEmployee/{id}',[EmployeeController::class, 'updateEmployee']);
 Route::get('/EmployeeWithSocialId/{id}',[EmployeeController::class, 'employeeBySocialId']);
-Route::get('/listarEmployee',[EmployeeController::class, 'listaEmployees'])->name('workers.index');
 //occupations
 Route::get('/occupation', [OccupationController::class, 'vistaOccupations'])->name('occupations.vista');
 Route::get('/udtOccupation/{id}',[OccupationController::class, 'occupationById']);
