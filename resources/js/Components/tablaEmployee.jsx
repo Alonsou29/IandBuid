@@ -245,6 +245,9 @@ const handleViewApplications = async (employeeId, employeeName) => {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-lg w-full flex flex-col">
+      <div className="flex justify-between items-center border-b-4 border-red-700 pb-2">
+        <h2 className="text-xl font-bold text-red-800">Employees</h2>
+      </div>
       <div className="mt-4 flex justify-start">
         <div className="mb-4 flex items-center bg-gray-100 rounded-full px-3 py-1 w-[280px]">
           <svg
